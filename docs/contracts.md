@@ -54,7 +54,7 @@ Run both from the repository root; the generator reads and writes paths relative
 
 ```
 cargo test --locked                      # Rust, including the shared vectors
-cd contracts/ts && npm test              # TypeScript (Node 24 or later; no dependencies)
+cd contracts/ts && npm test              # TypeScript (Node 26 or later; no dependencies)
 cd contracts/python && python3 -m unittest discover -s tests   # Python 3.11 or later; no dependencies
 ```
 
