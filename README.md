@@ -42,7 +42,7 @@ Run the tests:
 ```
 cargo test --locked
 cargo run --locked -q -p contractgen -- --check          # generated bindings are current
-(cd contracts/ts && npm test)                            # Node 24 or later, no dependencies
+(cd contracts/ts && npm test)                            # Node 26 or later, no dependencies
 (cd contracts/python && python3 -m unittest discover -s tests)   # Python 3.11 or later, no dependencies
 ```
 
