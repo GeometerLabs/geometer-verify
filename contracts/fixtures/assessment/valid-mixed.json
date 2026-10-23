@@ -1,5 +1,5 @@
 {
-  "id": "assessment:5d900dc8c7b0ef8b1301ba84e2737b7e679464e22dd6712261b9fa3bd47699fc",
+  "id": "assessment:8f910e9450ea2320badccc10ca96f8fae52aa3c0a8ba35a65b1640fb8bd17101",
   "manifest": {
     "artifact": "example",
     "assessed_from_ms": "1790000000000",
@@ -181,7 +181,7 @@
       }
     ],
     "notes": [
-      "Signature bytes are placeholders: C1 does not verify signatures, and under C3 this vector's integrity is invalid.",
+      "Signature bytes are placeholders: they are not real signatures, so a verifier that checks signatures finds this vector's integrity invalid.",
       "The second signature uses a suite this reader does not know; it decodes, and a verifier reports it as unverifiable."
     ],
     "rules": [

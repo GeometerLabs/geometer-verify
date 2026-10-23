@@ -6,7 +6,7 @@
 //! approval. This module defines, once, how its identity is derived and what a
 //! well-formed assessment must satisfy. It does not sign, verify signatures,
 //! judge integrity or applicability, or look up status: those belong to the
-//! verifier (C3), which builds on the definitions here.
+//! verifier, which builds on the definitions here.
 //!
 //! - **Identity.** `id = "assessment:" + hex(sha256("geo-assessment/1\n" ||
 //!   canonical bytes of the AssessmentManifest))`. The signatures are outside
@@ -54,7 +54,7 @@ pub fn assessment_id(m: &AssessmentManifest) -> Id {
     Id::new(format!("{ID_PREFIX}{}", d.hex())).expect("hex id is valid")
 }
 
-/// The bytes one signature covers (C3 signs and verifies them; nothing here
+/// The bytes one signature covers (the verifier checks them; nothing here
 /// signs): the domain tag and the canonical [`AssessmentSignatureInput`].
 pub fn signature_message(assessment: &Id, s: &AssessmentSignature) -> Vec<u8> {
     let input = AssessmentSignatureInput {
@@ -75,7 +75,7 @@ pub fn status_event_hash(e: &AssessmentStatusEvent) -> Digest {
     Digest::of(&[STATUS_DOMAIN, &c.encode()].concat())
 }
 
-// ------------------------------------------------------------ C2/C3 formats
+// ------------------------------------------------------------ Status and renewal formats
 
 /// Domain tag of the bytes a signature on a status event, status statement or
 /// renewal covers.

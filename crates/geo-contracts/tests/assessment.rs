@@ -273,7 +273,7 @@ fn every_problem_code_is_exercised_by_a_vector() {
     }
 }
 
-/// C2/C3 formats: a status-record signature, a statement's hash
+/// Status and renewal formats: a status-record signature, a statement's hash
 /// and a renewal's hash each have their own domain tag, ignore the signatures
 /// they carry, and bind the record they name.
 #[test]

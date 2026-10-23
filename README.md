@@ -82,7 +82,7 @@ target/release/geo-verify assessment contracts/fixtures/assessment/valid-unsigne
 
 ## The schemas are the contract
 
-`contracts/schemas/core.toml` is the single source for Geometer's records: how they are named, typed and encoded to canonical bytes. Hashes and signatures are computed over those bytes, so the schema is what makes a record checkable by anyone. The Rust, TypeScript and Python codecs are generated from it and run against the same vectors. See [docs/contracts.md](docs/contracts.md).
+`contracts/schemas/core.toml` is the single source for the records a verifier reads (and what they refer to): how they are named, typed and encoded to canonical bytes. Hashes and signatures are computed over those bytes, so the schema is what makes a record checkable by anyone. The Rust, TypeScript and Python codecs are generated from it and run against the same vectors. See [docs/contracts.md](docs/contracts.md).
 
 ## Relationship to the Geometer product
 
@@ -92,8 +92,12 @@ The code here is exported from Geometer's main source tree by an allow-list, and
 
 ## Versioning
 
-Releases are tagged on this repository and follow the Geometer release number (the first is `0.1.0-alpha.1`). The Rust crates currently declare `0.1.0`, and `geo-verify 0.1.0` is the name recorded in assessment verification results. The formats carry their own versions: the evidence pack is `geometer.evidence-pack` version 1, the assessment bundle is `geometer.assessment-bundle` version 1, and the protocol in the schema is `geo/2`. Inside a version, schema changes are additive only (docs/contracts.md).
+Releases are tagged on this repository and follow the Geometer release number (the first is `0.1.0-alpha.1`). The Rust crates declare the same version, and `geo-verify <version>` is the name recorded in assessment verification results. The formats carry their own versions: the evidence pack is `geometer.evidence-pack` version 1, the assessment bundle is `geometer.assessment-bundle` version 1, and the protocol in the schema is `geo/2`. Inside a version, schema changes are additive only (docs/contracts.md).
 
 ## Licence and security
 
-Apache License 2.0; see `LICENSE` and `NOTICE`. To report a vulnerability, see [SECURITY.md](SECURITY.md). All keys and seeds in the test fixtures are public synthetic constants and must never be trusted for real data.
+Apache License 2.0; see `LICENSE` and `NOTICE`.
+
+Copyright 2026 Naval Tharun
+
+To report a vulnerability, see [SECURITY.md](SECURITY.md). All keys and seeds in the test fixtures are public synthetic constants and must never be trusted for real data.

@@ -6,13 +6,13 @@ The schemas in this repository are the contract that Geometer's records follow. 
 
 | Path | What it is |
 | --- | --- |
-| `contracts/schemas/core.toml` | The schema. 168 records, 100 enums and 10 unions at the time of writing (the generator prints the exact count). It covers the whole of Geometer's record vocabulary, including parts that only the closed Geometer product produces (for example Guard decisions, search and replay records). The evidence pack and the assessment certificate are in the sections "Prove" and "Assessments". |
+| `contracts/schemas/core.toml` | The schema: 59 records, 32 enums and 3 unions at the time of writing. It holds the records the verifier reads (evidence packs, ledger entries, checkpoints, the key log, anchors, signature suites, assessment certificates, bundles, trust policies and status) and the records those refer to. Geometer's own products use more records than these; they are not part of this repository. |
 | `crates/geo-contracts/src/generated.rs` | Generated Rust records and codecs. |
 | `contracts/ts/src/generated.ts` | Generated TypeScript records and codecs. |
 | `contracts/python/geometer_contracts/generated.py` | Generated Python records and codecs. |
-| `crates/geo-contracts/src/` (other files) | Hand-written Rust: strict JSON parser and canonical writer (`json.rs`), portable values (`value.rs`), the codec trait (`codec.rs`), assessment rules (`assessment.rs`), readers for earlier protocol versions (`compat.rs`), and a few helpers. |
+| `crates/geo-contracts/src/` (other files) | Hand-written Rust: strict JSON parser and canonical writer (`json.rs`), portable values (`value.rs`), the codec trait (`codec.rs`), errors, and the assessment rules the verifier uses (`assessment.rs`). |
 | `contracts/ts/src/`, `contracts/python/geometer_contracts/` | The same hand-written parts for TypeScript and Python. |
-| `contracts/fixtures/` | Shared test vectors and example records. Rust, TypeScript and Python all run them. |
+| `contracts/fixtures/` | Shared test vectors (`vectors.json`, 30 accepted and 21 refused inputs) and assessment examples. Rust, TypeScript and Python all run them. |
 | `tools/contractgen/` | The generator. |
 
 ## Encoding
@@ -46,7 +46,7 @@ Run both from the repository root; the generator reads and writes paths relative
 - **The protocol version** is the `meta.protocol` value in the schema (`geo/2`). Records of the current version are decoded strictly.
 - **Additive changes only inside a version.** New records, new enum values and new optional fields may be added. A new optional field is omitted when absent, so records written without it keep their exact bytes and hashes. Nothing is renamed, removed or retyped inside a version.
 - **A change to meaning is a new name or a new version.** The signature suites are an example: a different parameter set or context string is a new suite id (`geo-ml-dsa-65/2`), never a reinterpretation of existing bytes.
-- **Older versions are read by migration, not by loosening.** `geo/1` records are migrated on the JSON tree before strict decoding (`compat.rs`, `compat.ts`, `compat.py`). A `geo/1` record becomes a test-trial context; no production context is ever made up.
+- **Older versions are read by migration, not by loosening.** If a record format is ever read across versions, the old form is migrated before strict decoding; current decoders stay strict.
 - **Unknown values are refused, not guessed.** A decoder that meets an unknown field, an unknown enum value or an unsupported schema version fails with a typed error. The verifier reports an unknown signature suite or profile as unusable (never as valid).
 - **Three languages, one behaviour.** A change is complete when Rust, TypeScript and Python all pass the shared vectors.
 

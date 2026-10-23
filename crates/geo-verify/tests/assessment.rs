@@ -651,7 +651,7 @@ fn an_unsigned_assessment_is_unsigned_and_a_bare_record_reads_as_a_bundle() {
     j["manifest"]["schema"] = "geo_assessment_v2".into();
     let e = read_bundle(&serde_json::to_vec(&j).unwrap()).unwrap_err();
     assert!(e.contains("unsupported_schema_version"), "{e}");
-    // The derived views of a C1 example with signature placeholders: not trusted.
+    // The derived views of an example with signature placeholders: not trusted.
     let mixed = read_bundle(&std::fs::read(format!("{DIR}valid-mixed.json")).unwrap()).unwrap();
     let v = verify(&Inputs {
         bundle: &mixed,

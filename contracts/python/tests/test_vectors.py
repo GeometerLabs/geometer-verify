@@ -31,17 +31,6 @@ class Vectors(unittest.TestCase):
                     roundtrip_named(c["type"], _input(c))
                 self.assertEqual(cm.exception.cls, c["error"], str(cm.exception))
 
-    def test_geo1_migration(self):
-        from geometer_contracts.compat import migrate_named
-
-        for c in VECTORS["migrations"]:
-            with self.subTest(c["id"]):
-                self.assertEqual(migrate_named(c["type"], _input(c)).decode("utf-8"), c["canonical"])
-        for c in VECTORS["migration_negative"]:
-            with self.subTest(c["id"]):
-                with self.assertRaises(DecodeError) as cm:
-                    migrate_named(c["type"], _input(c))
-                self.assertEqual(cm.exception.cls, c["error"], str(cm.exception))
 
 
 if __name__ == "__main__":

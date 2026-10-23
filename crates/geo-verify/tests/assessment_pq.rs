@@ -1,4 +1,4 @@
-//! C4 wired into assessment verification: an assessment
+//! Signature profiles wired into assessment verification: an assessment
 //! can carry an ed25519 and an ML-DSA-65 signature, and `verify` checks each
 //! under its suite. Hybrid and PQ-only policies verify; a missing second
 //! signature, a downgrade of the required suites and a mislabelled signature

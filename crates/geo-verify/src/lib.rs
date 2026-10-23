@@ -250,7 +250,7 @@ pub fn check_key_log(events: &[KeyEvent]) -> KeyLog {
             bad(&mut log, format!("key log event {seq} was edited"));
             return log;
         }
-        // Each signature is checked under its signer's registered suite (C4); an
+        // Each signature is checked under its signer's registered suite; an
         // ed25519 signer uses the original key-event message.
         let signed_by = |log: &KeyLog, k: &str, need_active: bool| -> bool {
             e.sigs.iter().any(|s| {
@@ -529,7 +529,7 @@ pub fn verify_pack_with(pack: &EvidencePack, anchors: &[Anchor], policy: &suite:
             inv.push(Finding::new("tenant", Some(c.seq), "a checkpoint belongs to another tenant"));
             continue;
         }
-        // Signatures under the suites the key log's profile requires (C4); a classical checkpoint is checked as before.
+        // Signatures under the suites the key log's profile requires; a classical checkpoint is checked as before.
         let signers = match suite::checkpoint_signers(&kl, c, None, policy) {
             Ok(s) => s,
             Err(r) => {

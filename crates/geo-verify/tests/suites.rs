@@ -1,4 +1,4 @@
-//! C4: the verifier's signature-suite primitives against standardized vectors
+//! The verifier's signature-suite primitives against standardized vectors
 //! (a NIST ACVP ML-DSA-65 subset, tests/fixtures/acvp, NIST notice in
 //! LICENSE-NIST.txt) and malformed inputs. The vectors go through the same
 //! functions the verifier calls, not the library directly.

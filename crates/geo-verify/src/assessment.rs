@@ -23,7 +23,7 @@
 //!   the reader reads directly (its own store). An old bundle cannot assert
 //!   that it was not withdrawn since.
 //! - Suites are dispatched in one function, [`verify_suite`], so a new suite
-//!   (for example the post-quantum suite of C4) is one more arm; a suite this
+//!   (for example the post-quantum suite) is one more arm; a suite this
 //!   verifier does not know is reported unverifiable, never accepted.
 //!
 //! No network, no store, no host: the caller reads files and passes bytes.
@@ -73,7 +73,7 @@ pub fn verify_suite(suite: &str, algorithm: &str, public_key: &[u8], message: &[
                 Err(_) => SuiteCheck::Invalid("the signature does not verify".into()),
             }
         }
-        // C4: ML-DSA-65, FIPS 204, pure interface with the suite's empty context.
+        // ML-DSA-65, FIPS 204, pure interface with the suite's empty context.
         (crate::suite::ML_DSA_65, "ml-dsa-65") => {
             match crate::suite::verify(crate::suite::ML_DSA_65, public_key, message, signature) {
                 crate::suite::SigCheck::Valid => SuiteCheck::Valid,
@@ -232,7 +232,7 @@ fn trust_of(p: &AssessmentTrustPolicy) -> Trust {
                         e.key.to_string(),
                         TrustedKey {
                             public_key: bytes,
-                            // The key log records each key's suite (C4); absent means ed25519.
+                            // The key log records each key's suite; absent means ed25519.
                             suite: e.suite.as_ref().map_or(a::SUITE_ED25519, |s| s.as_str()).into(),
                             algorithm: crate::suite::suite(e.suite.as_ref().map_or(a::SUITE_ED25519, |s| s.as_str()))
                                 .map_or("unknown", |s| s.algorithm)
@@ -260,7 +260,7 @@ fn trust_of(p: &AssessmentTrustPolicy) -> Trust {
                     }
                 }
             }
-            // A profile event (C4) changes which signatures checkpoints need; it introduces and revokes no key.
+            // A profile event changes which signatures checkpoints need; it introduces and revokes no key.
             KeyEventKind::Genesis | KeyEventKind::Profile => {}
         }
     }

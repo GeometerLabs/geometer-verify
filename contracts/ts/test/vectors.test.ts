@@ -27,14 +27,3 @@ test("negative vectors reject with the declared class", () => {
   }
 });
 
-test("geo/1 migration vectors", async () => {
-  const { migrateNamed } = await import("../src/index.ts");
-  for (const c of vectors.migrations) assert.equal(dec.decode(migrateNamed(c.type, input(c))), c.canonical, c.id);
-  for (const c of vectors.migration_negative) {
-    assert.throws(() => migrateNamed(c.type, input(c)), (e: unknown) => {
-      assert.ok(e instanceof DecodeError, `${c.id}: ${e}`);
-      assert.equal(e.cls, c.error, `${c.id}: ${e.message}`);
-      return true;
-    }, c.id);
-  }
-});

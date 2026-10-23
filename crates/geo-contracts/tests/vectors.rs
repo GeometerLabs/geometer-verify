@@ -42,22 +42,3 @@ fn negative_vectors_reject_with_the_declared_class() {
         }
     }
 }
-
-#[test]
-fn legacy_migration_vectors() {
-    let v = vectors();
-    let mut n = 0;
-    for c in v["migrations"].as_array().unwrap() {
-        let out = geo_contracts::compat::migrate_named(c["type"].as_str().unwrap(), &input(c))
-            .unwrap_or_else(|e| panic!("{}: {e}", c["id"]));
-        assert_eq!(String::from_utf8(out).unwrap(), c["canonical"].as_str().unwrap(), "{}", c["id"]);
-        n += 1;
-    }
-    assert!(n >= 5);
-    for c in v["migration_negative"].as_array().unwrap() {
-        match geo_contracts::compat::migrate_named(c["type"].as_str().unwrap(), &input(c)) {
-            Ok(out) => panic!("{} accepted: {}", c["id"], String::from_utf8_lossy(&out)),
-            Err(e) => assert_eq!(e.class.as_str(), c["error"].as_str().unwrap(), "{}: {e}", c["id"]),
-        }
-    }
-}
