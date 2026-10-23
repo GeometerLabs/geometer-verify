@@ -1,0 +1,479 @@
+{
+  "id": "assessment:20235b6672ee166041e1c90bb5b27453c213d68059edeb7cf0c4df7adf60f039",
+  "manifest": {
+    "artifact": "redacted_derivative",
+    "assessed_from_ms": "1790000000000",
+    "assessed_to_ms": "1790000600000",
+    "claim": {
+      "conditions": [
+        "only for the stated revision and configuration"
+      ],
+      "dependencies": [
+        "trial-9"
+      ],
+      "expires_ms": "1797800000000",
+      "invalidation": [
+        "subject_changed",
+        "rule_changed",
+        "config_changed"
+      ],
+      "kind": "bounded_assessment",
+      "review": "issuer_reviewed",
+      "reviewers": [],
+      "statement": "No violation was observed within the stated budget. This is not a proof."
+    },
+    "derived_from": "assessment:c05b39c823d7ec7c686a0fef2122ba2f311f32df0e2ff4d0aaf4b900ab0abee7",
+    "evidence": [
+      {
+        "digest": "sha256:92220d70c088b3eb3df4dc43639f01d19cf6b1cc9c3d629a42968d8e41ad2513",
+        "id": "trial-9",
+        "location": "store/objects/trial-9",
+        "note": "synthetic",
+        "payload": "redacted",
+        "privacy": "private",
+        "redactions": [
+          "account numbers and owners removed"
+        ],
+        "required": true,
+        "role": "trial_record",
+        "size": "100"
+      },
+      {
+        "digest": "sha256:f5a4147745994ac50c8dbc613c7dfc3fbd685d5288c880266d93300c86b0b669",
+        "id": "checkpoint-12",
+        "ledger": {
+          "hash": "sha256:673ab9ad672d468916311bdb4322311f469a1fc97f357defba885dd30afbe9e4",
+          "ledger": "guard-1",
+          "rel": "checkpoint",
+          "seq": "12",
+          "tenant": "acme"
+        },
+        "location": "store/objects/checkpoint-12",
+        "note": "synthetic",
+        "payload": "present",
+        "privacy": "public",
+        "redactions": [],
+        "required": false,
+        "role": "checkpoint",
+        "size": "100"
+      },
+      {
+        "digest": "sha256:2632e0bbd892897b658dc839bd8592dba6e9caff133fd9bd143ae84b324835ea",
+        "id": "anchor-1",
+        "ledger": {
+          "hash": "sha256:fe0276fbcd25a379712af8d813c437efa329d072a80e85e98dc864ad1f31a119",
+          "ledger": "guard-1",
+          "rel": "anchor",
+          "seq": "12",
+          "tenant": "acme"
+        },
+        "location": "store/objects/anchor-1",
+        "note": "synthetic",
+        "payload": "present",
+        "privacy": "public",
+        "redactions": [],
+        "required": false,
+        "role": "anchor",
+        "size": "100"
+      }
+    ],
+    "findings": [
+      {
+        "actions": [],
+        "assumptions": [],
+        "evidence": [
+          "trial-9"
+        ],
+        "exclusions": [],
+        "fidelity": "simulated",
+        "method": "explore-1",
+        "outcome": "no_violation_observed_within_scope",
+        "replay": "not_attempted",
+        "rule": "balance-non-negative",
+        "rule_digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+        "statement": "No negative balance in 20 complete trials.",
+        "unknowns": [],
+        "witnesses": []
+      },
+      {
+        "actions": [],
+        "assumptions": [],
+        "evidence": [
+          "trial-9"
+        ],
+        "exclusions": [],
+        "fidelity": "simulated",
+        "method": "explore-1",
+        "outcome": "no_violation_observed_within_scope",
+        "replay": "not_attempted",
+        "rule": "account-number-unique",
+        "rule_digest": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760",
+        "statement": "No duplicate account number in 20 complete trials.",
+        "unknowns": [],
+        "witnesses": []
+      },
+      {
+        "actions": [],
+        "assumptions": [],
+        "evidence": [
+          "checkpoint-12"
+        ],
+        "exclusions": [],
+        "fidelity": "simulated",
+        "incident": "blocked_reconstruction",
+        "method": "runtime-1",
+        "outcome": "unknown_or_incomplete",
+        "replay": "not_attempted",
+        "rule": "owner-present",
+        "rule_digest": "sha256:65818e1321c18b98d31424d15bb49b5b630eb06c6074fb779127dc301415b0b1",
+        "statement": "An imported incident could not be reconstructed: the account row was missing.",
+        "unknowns": [
+          "the account row the incident needs is not retained"
+        ],
+        "witnesses": []
+      }
+    ],
+    "issued_ms": "1790100000000",
+    "issuer": {
+      "generator": "contracts/fixtures/assessment generator",
+      "id": "vector-issuer",
+      "keys": [],
+      "name": "Synthetic contract test vector (not an issuer)"
+    },
+    "methods": [
+      {
+        "budget": {
+          "depth": 8,
+          "permits": "216",
+          "trials": "24"
+        },
+        "conditions": [
+          "synthetic"
+        ],
+        "id": "explore-1",
+        "inputs": {
+          "workload.toml": "sha256:4a0da2efe32572d4d32e4c489362f8477a6488b52693e6d09fedb28f9ff62f07"
+        },
+        "kind": "bounded_exploration",
+        "reach": {
+          "complete": "20",
+          "decisions": "61",
+          "depth_cut": "4",
+          "exhausted": "trial budget",
+          "finished": false,
+          "invalid": "0",
+          "notes": [],
+          "permits": "190",
+          "pruned": "0",
+          "sleep_blocked": "0",
+          "trials": "24",
+          "unexplored": "7"
+        },
+        "sampling": "none: exhaustive within the depth bound",
+        "seeds": [
+          "0"
+        ],
+        "strategy": "exhaustive",
+        "termination": [
+          "trial budget exhausted with 7 alternatives unexplored"
+        ],
+        "unexercised_paths": [
+          "concurrent transfers between more than two accounts"
+        ],
+        "unexercised_rules": [],
+        "verifier": "rules state evaluator (synthetic)",
+        "version": "geometer 0.1.0 (synthetic)"
+      },
+      {
+        "conditions": [
+          "synthetic"
+        ],
+        "id": "runtime-1",
+        "inputs": {},
+        "kind": "runtime_evidence",
+        "sampling": "every Guard decision in the window",
+        "seeds": [],
+        "termination": [
+          "end of the assessed window"
+        ],
+        "unexercised_paths": [],
+        "unexercised_rules": [],
+        "verifier": "geo-verify (synthetic)",
+        "version": "geometer 0.1.0 (synthetic)"
+      }
+    ],
+    "notes": [
+      "Synthetic test vector: a redacted copy of valid-unsigned for publication; the original's bytes are unchanged."
+    ],
+    "rules": [
+      {
+        "bindings": [
+          {
+            "adapters": [
+              "store-observer.ledger-db"
+            ],
+            "coordination": "none (evaluated after the trial)",
+            "failure": "unknown",
+            "mode": "explore",
+            "projection": "observer snapshots at baseline and final; gateway statement history",
+            "rule": "balance-non-negative",
+            "rule_digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+            "support": {
+              "kind": "supported"
+            }
+          },
+          {
+            "adapters": [],
+            "coordination": "",
+            "failure": "deny",
+            "mode": "guard",
+            "projection": "",
+            "rule": "balance-non-negative",
+            "rule_digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+            "support": {
+              "kind": "unsupported",
+              "reason": "a pre-effect bound needs the projected post-state with every writer coordinated through a reservation or conditional update"
+            }
+          }
+        ],
+        "exceptions": [
+          {
+            "authorized_by": "risk-officer",
+            "expires_ms": "1797800000000",
+            "id": "exc-1",
+            "reason": "a settlement account may go negative intraday",
+            "scope": "the house account (number 0)"
+          }
+        ],
+        "owner": "ledger team (synthetic)",
+        "preconditions": [],
+        "required": true,
+        "reviews": [
+          {
+            "accepted": true,
+            "note": "synthetic review record",
+            "reviewer": "reviewer-1",
+            "rule_digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+            "scope": "synthetic"
+          }
+        ],
+        "rule": {
+          "digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+          "id": "balance-non-negative",
+          "intent": "approved_rule",
+          "meaning": {
+            "body": {
+              "column": "balance",
+              "kind": "numeric_bound",
+              "min": [
+                "int",
+                "0"
+              ],
+              "ns": "ledger-db.accounts"
+            },
+            "evidence": [
+              "final_state",
+              "statement_history",
+              "transaction_outcomes"
+            ],
+            "units": {
+              "balance": "EUR cents"
+            },
+            "unless": []
+          },
+          "provenance": "synthetic test vector"
+        },
+        "statement": "An account balance never goes below zero.",
+        "version": "1"
+      },
+      {
+        "bindings": [
+          {
+            "adapters": [
+              "store-observer.ledger-db"
+            ],
+            "coordination": "none (evaluated after the trial)",
+            "failure": "unknown",
+            "mode": "explore",
+            "projection": "observer snapshots at baseline and final; gateway statement history",
+            "rule": "account-number-unique",
+            "rule_digest": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760",
+            "support": {
+              "kind": "supported"
+            }
+          },
+          {
+            "adapters": [],
+            "coordination": "",
+            "failure": "deny",
+            "mode": "guard",
+            "projection": "",
+            "rule": "account-number-unique",
+            "rule_digest": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760",
+            "support": {
+              "kind": "unsupported",
+              "reason": "a pre-effect bound needs the projected post-state with every writer coordinated through a reservation or conditional update"
+            }
+          }
+        ],
+        "exceptions": [],
+        "owner": "ledger team (synthetic)",
+        "preconditions": [],
+        "required": true,
+        "reviews": [
+          {
+            "accepted": true,
+            "note": "synthetic review record",
+            "reviewer": "reviewer-1",
+            "rule_digest": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760",
+            "scope": "synthetic"
+          }
+        ],
+        "rule": {
+          "digest": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760",
+          "id": "account-number-unique",
+          "intent": "approved_rule",
+          "meaning": {
+            "body": {
+              "columns": [
+                "number"
+              ],
+              "kind": "unique_key",
+              "ns": "ledger-db.accounts"
+            },
+            "evidence": [
+              "final_state",
+              "statement_history",
+              "transaction_outcomes"
+            ],
+            "units": {},
+            "unless": []
+          },
+          "provenance": "synthetic test vector"
+        },
+        "statement": "No two accounts share an account number.",
+        "version": "1"
+      },
+      {
+        "bindings": [
+          {
+            "adapters": [
+              "store-observer.ledger-db"
+            ],
+            "coordination": "none (evaluated after the trial)",
+            "failure": "unknown",
+            "mode": "explore",
+            "projection": "observer snapshots at baseline and final; gateway statement history",
+            "rule": "owner-present",
+            "rule_digest": "sha256:65818e1321c18b98d31424d15bb49b5b630eb06c6074fb779127dc301415b0b1",
+            "support": {
+              "kind": "supported"
+            }
+          },
+          {
+            "adapters": [],
+            "coordination": "",
+            "failure": "deny",
+            "mode": "guard",
+            "projection": "",
+            "rule": "owner-present",
+            "rule_digest": "sha256:65818e1321c18b98d31424d15bb49b5b630eb06c6074fb779127dc301415b0b1",
+            "support": {
+              "kind": "unsupported",
+              "reason": "a pre-effect bound needs the projected post-state with every writer coordinated through a reservation or conditional update"
+            }
+          }
+        ],
+        "exceptions": [],
+        "owner": "ledger team (synthetic)",
+        "preconditions": [],
+        "required": false,
+        "reviews": [
+          {
+            "accepted": true,
+            "note": "synthetic review record",
+            "reviewer": "reviewer-1",
+            "rule_digest": "sha256:65818e1321c18b98d31424d15bb49b5b630eb06c6074fb779127dc301415b0b1",
+            "scope": "synthetic"
+          }
+        ],
+        "rule": {
+          "digest": "sha256:65818e1321c18b98d31424d15bb49b5b630eb06c6074fb779127dc301415b0b1",
+          "id": "owner-present",
+          "intent": "approved_rule",
+          "meaning": {
+            "body": {
+              "column": "owner",
+              "kind": "not_null",
+              "ns": "ledger-db.accounts"
+            },
+            "evidence": [
+              "final_state",
+              "statement_history",
+              "transaction_outcomes"
+            ],
+            "units": {},
+            "unless": []
+          },
+          "provenance": "synthetic test vector"
+        },
+        "statement": "Every account has an owner.",
+        "version": "1"
+      }
+    ],
+    "schema": "geo_assessment_v1",
+    "subject": {
+      "boundary": {
+        "covered": [
+          "ledger-db writes through the observed connection"
+        ],
+        "outside": [
+          "other writers of ledger-db",
+          "the payment network"
+        ],
+        "statement": "Only the service's own database writes are observed."
+      },
+      "config": {
+        "service.toml": "sha256:e27695f16880a7e11e2ca0d0e0a2e8a644eb839539e231fba248c302ea472933"
+      },
+      "dependencies": {
+        "postgres": "sha256:f0e4772840577e645a7f6721e0199ae45ba4da14141e7da6dc2f240b5601e107"
+      },
+      "environment": "sha256:01d64f3716b528ff5dc044bd616758f8ea92d96fcdbde2120185afccc6a73e71",
+      "models": [],
+      "name": "Synthetic ledger service (contract test vector)",
+      "revision": {
+        "digest": "sha256:09c36fd1bd15da8b61e43d14031b589d0c667119a3aa023a3d8edde581d1b19f",
+        "inputs": [
+          "."
+        ],
+        "vcs": {
+          "dirty": false,
+          "revision": "0000000000000000000000000000000000000000",
+          "system": "git"
+        }
+      }
+    },
+    "summary": {
+      "incomplete_required": [],
+      "missing_evidence": [],
+      "no_violation_observed": [
+        "balance-non-negative",
+        "account-number-unique"
+      ],
+      "not_exercised": [],
+      "outcome": "no_violation_observed_within_scope",
+      "proved": [],
+      "unknown_or_incomplete": [
+        "owner-present"
+      ],
+      "violation_found": []
+    },
+    "verification": {
+      "policy": "geo-assessment-policy/unsigned-local",
+      "required_suites": [],
+      "status": []
+    }
+  },
+  "signatures": []
+}

@@ -1,0 +1,12 @@
+[package]
+name = "contractgen"
+description = "Generates Rust, TypeScript and Python contract codecs from contracts/schemas"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+repository = "https://github.com/GeometerLabs/geometer-verify"
+
+[dependencies]
+anyhow = "1"
+toml = "1"

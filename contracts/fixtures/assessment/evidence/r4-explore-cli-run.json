@@ -1,0 +1,33 @@
+{
+  "producer": "Geometer qualification harness (public excerpt)",
+  "case": {
+    "id": "explore-cli",
+    "title": "geo explore finds the lost-reply double refund in both agents (approved finding fails the command, candidates do not) with its attempt/effect trace and per-agent source/runtime parity; geo replay reproduces it from a clean reset with the recorded tape and no model upstream; geo open serves the same store's campaigns, trial traces, findings and replays",
+    "class": "live_owned"
+  },
+  "run_id": "20261001T170222.326Z",
+  "started_unix_ms": 1790874142326,
+  "duration_ms": 55421,
+  "exit_code": 0,
+  "timed_out": false,
+  "vcs_dirty": true,
+  "toolchains": {
+    "docker": "29.8.1",
+    "go": "go version go1.27.1 linux/amd64",
+    "java": "openjdk version \"21.0.12.1\" 2026-08-18",
+    "node": "v26.10.0",
+    "python": "Python 3.12.3",
+    "rust": "rustc 1.96.1 (31fca3adb 2026-06-26)"
+  },
+  "derived": {
+    "outcome": "pass",
+    "passed": 1,
+    "failed": 0,
+    "detail": ""
+  },
+  "platform": {
+    "arch": "x86_64",
+    "os": "linux",
+    "os_release": "Ubuntu 24.04.5 LTS"
+  }
+}

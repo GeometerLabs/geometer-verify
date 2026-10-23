@@ -1,0 +1,329 @@
+{
+  "id": "assessment:34f08c85b02eaac9a2cde825d93b5c35c4b17b3f54fd753413e01f1e2f9ff8ef",
+  "manifest": {
+    "artifact": "assessment",
+    "assessed_from_ms": "1790000000000",
+    "assessed_to_ms": "1790000600000",
+    "claim": {
+      "conditions": [],
+      "dependencies": [
+        "trial-3"
+      ],
+      "invalidation": [
+        "subject_changed",
+        "rule_changed",
+        "config_changed"
+      ],
+      "kind": "bounded_assessment",
+      "review": "unreviewed",
+      "reviewers": [],
+      "statement": "Incomplete: one required rule could not be evaluated and the cited trial record was deleted."
+    },
+    "evidence": [
+      {
+        "digest": "sha256:18ed17e6839961cc713274155690664cb30267f15e36380b9fc3a0af8e4f364a",
+        "id": "trial-3",
+        "location": "store/objects/trial-3",
+        "note": "synthetic",
+        "payload": "deleted",
+        "privacy": "public",
+        "redactions": [],
+        "required": true,
+        "role": "trial_record",
+        "size": "100"
+      }
+    ],
+    "findings": [
+      {
+        "actions": [],
+        "assumptions": [],
+        "evidence": [
+          "trial-3"
+        ],
+        "exclusions": [],
+        "fidelity": "simulated",
+        "method": "explore-1",
+        "outcome": "unknown_or_incomplete",
+        "replay": "not_attempted",
+        "rule": "balance-non-negative",
+        "rule_digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+        "statement": "The final state could not be read in 4 trials.",
+        "unknowns": [
+          "final state snapshot missing in 4 of 24 trials"
+        ],
+        "witnesses": []
+      },
+      {
+        "actions": [],
+        "assumptions": [],
+        "evidence": [
+          "trial-3"
+        ],
+        "exclusions": [],
+        "fidelity": "simulated",
+        "method": "explore-1",
+        "outcome": "no_violation_observed_within_scope",
+        "replay": "not_attempted",
+        "rule": "account-number-unique",
+        "rule_digest": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760",
+        "statement": "No duplicate account number in 20 complete trials.",
+        "unknowns": [],
+        "witnesses": []
+      }
+    ],
+    "issued_ms": "1790100000000",
+    "issuer": {
+      "generator": "contracts/fixtures/assessment generator",
+      "id": "vector-issuer",
+      "keys": [],
+      "name": "Synthetic contract test vector (not an issuer)"
+    },
+    "methods": [
+      {
+        "budget": {
+          "depth": 8,
+          "permits": "216",
+          "trials": "24"
+        },
+        "conditions": [
+          "synthetic"
+        ],
+        "id": "explore-1",
+        "inputs": {
+          "workload.toml": "sha256:4a0da2efe32572d4d32e4c489362f8477a6488b52693e6d09fedb28f9ff62f07"
+        },
+        "kind": "bounded_exploration",
+        "reach": {
+          "complete": "20",
+          "decisions": "61",
+          "depth_cut": "4",
+          "exhausted": "trial budget",
+          "finished": false,
+          "invalid": "0",
+          "notes": [],
+          "permits": "190",
+          "pruned": "0",
+          "sleep_blocked": "0",
+          "trials": "24",
+          "unexplored": "7"
+        },
+        "sampling": "none: exhaustive within the depth bound",
+        "seeds": [
+          "0"
+        ],
+        "strategy": "exhaustive",
+        "termination": [
+          "trial budget exhausted with 7 alternatives unexplored"
+        ],
+        "unexercised_paths": [
+          "concurrent transfers between more than two accounts"
+        ],
+        "unexercised_rules": [],
+        "verifier": "rules state evaluator (synthetic)",
+        "version": "geometer 0.1.0 (synthetic)"
+      }
+    ],
+    "notes": [
+      "Synthetic test vector."
+    ],
+    "rules": [
+      {
+        "bindings": [
+          {
+            "adapters": [
+              "store-observer.ledger-db"
+            ],
+            "coordination": "none (evaluated after the trial)",
+            "failure": "unknown",
+            "mode": "explore",
+            "projection": "observer snapshots at baseline and final; gateway statement history",
+            "rule": "balance-non-negative",
+            "rule_digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+            "support": {
+              "kind": "supported"
+            }
+          },
+          {
+            "adapters": [],
+            "coordination": "",
+            "failure": "deny",
+            "mode": "guard",
+            "projection": "",
+            "rule": "balance-non-negative",
+            "rule_digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+            "support": {
+              "kind": "unsupported",
+              "reason": "a pre-effect bound needs the projected post-state with every writer coordinated through a reservation or conditional update"
+            }
+          }
+        ],
+        "exceptions": [],
+        "owner": "ledger team (synthetic)",
+        "preconditions": [],
+        "required": true,
+        "reviews": [
+          {
+            "accepted": true,
+            "note": "synthetic review record",
+            "reviewer": "reviewer-1",
+            "rule_digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+            "scope": "synthetic"
+          }
+        ],
+        "rule": {
+          "digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+          "id": "balance-non-negative",
+          "intent": "approved_rule",
+          "meaning": {
+            "body": {
+              "column": "balance",
+              "kind": "numeric_bound",
+              "min": [
+                "int",
+                "0"
+              ],
+              "ns": "ledger-db.accounts"
+            },
+            "evidence": [
+              "final_state",
+              "statement_history",
+              "transaction_outcomes"
+            ],
+            "units": {
+              "balance": "EUR cents"
+            },
+            "unless": []
+          },
+          "provenance": "synthetic test vector"
+        },
+        "statement": "An account balance never goes below zero.",
+        "version": "1"
+      },
+      {
+        "bindings": [
+          {
+            "adapters": [
+              "store-observer.ledger-db"
+            ],
+            "coordination": "none (evaluated after the trial)",
+            "failure": "unknown",
+            "mode": "explore",
+            "projection": "observer snapshots at baseline and final; gateway statement history",
+            "rule": "account-number-unique",
+            "rule_digest": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760",
+            "support": {
+              "kind": "supported"
+            }
+          },
+          {
+            "adapters": [],
+            "coordination": "",
+            "failure": "deny",
+            "mode": "guard",
+            "projection": "",
+            "rule": "account-number-unique",
+            "rule_digest": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760",
+            "support": {
+              "kind": "unsupported",
+              "reason": "a pre-effect bound needs the projected post-state with every writer coordinated through a reservation or conditional update"
+            }
+          }
+        ],
+        "exceptions": [],
+        "owner": "ledger team (synthetic)",
+        "preconditions": [],
+        "required": true,
+        "reviews": [
+          {
+            "accepted": true,
+            "note": "synthetic review record",
+            "reviewer": "reviewer-1",
+            "rule_digest": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760",
+            "scope": "synthetic"
+          }
+        ],
+        "rule": {
+          "digest": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760",
+          "id": "account-number-unique",
+          "intent": "approved_rule",
+          "meaning": {
+            "body": {
+              "columns": [
+                "number"
+              ],
+              "kind": "unique_key",
+              "ns": "ledger-db.accounts"
+            },
+            "evidence": [
+              "final_state",
+              "statement_history",
+              "transaction_outcomes"
+            ],
+            "units": {},
+            "unless": []
+          },
+          "provenance": "synthetic test vector"
+        },
+        "statement": "No two accounts share an account number.",
+        "version": "1"
+      }
+    ],
+    "schema": "geo_assessment_v1",
+    "subject": {
+      "boundary": {
+        "covered": [
+          "ledger-db writes through the observed connection"
+        ],
+        "outside": [
+          "other writers of ledger-db",
+          "the payment network"
+        ],
+        "statement": "Only the service's own database writes are observed."
+      },
+      "config": {
+        "service.toml": "sha256:e27695f16880a7e11e2ca0d0e0a2e8a644eb839539e231fba248c302ea472933"
+      },
+      "dependencies": {
+        "postgres": "sha256:f0e4772840577e645a7f6721e0199ae45ba4da14141e7da6dc2f240b5601e107"
+      },
+      "environment": "sha256:01d64f3716b528ff5dc044bd616758f8ea92d96fcdbde2120185afccc6a73e71",
+      "models": [],
+      "name": "Synthetic ledger service (contract test vector)",
+      "revision": {
+        "digest": "sha256:09c36fd1bd15da8b61e43d14031b589d0c667119a3aa023a3d8edde581d1b19f",
+        "inputs": [
+          "."
+        ],
+        "vcs": {
+          "dirty": false,
+          "revision": "0000000000000000000000000000000000000000",
+          "system": "git"
+        }
+      }
+    },
+    "summary": {
+      "incomplete_required": [
+        "balance-non-negative"
+      ],
+      "missing_evidence": [
+        "trial-3"
+      ],
+      "no_violation_observed": [
+        "account-number-unique"
+      ],
+      "not_exercised": [],
+      "outcome": "unknown_or_incomplete",
+      "proved": [],
+      "unknown_or_incomplete": [
+        "balance-non-negative"
+      ],
+      "violation_found": []
+    },
+    "verification": {
+      "policy": "geo-assessment-policy/unsigned-local",
+      "required_suites": [],
+      "status": []
+    }
+  },
+  "signatures": []
+}

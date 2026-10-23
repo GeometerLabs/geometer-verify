@@ -1,0 +1,848 @@
+{
+ "id": "two-actor-transactional",
+ "doc": "Two actors charge orders inside transactions. Order 42: a1's insert is rolled back, a2's commits (one committed effect: satisfied, the aborted statement is not counted). Order 43: both commit (violated). Order 44: a1 commits, a2's commit outcome is unknown after a timeout (unknown). Order 45: a1 commits one row, a2's statement affects zero rows (no-op, satisfied). Order 46: only a rolled-back attempt (unexercised).",
+ "graph": {
+  "id": "g-tx",
+  "actors": [
+   {
+    "id": "a1",
+    "entities": []
+   },
+   {
+    "id": "a2",
+    "entities": []
+   }
+  ],
+  "slots": [
+   {
+    "id": "order",
+    "ty": "entity:order"
+   }
+  ],
+  "nodes": [
+   {
+    "id": "n1",
+    "actor": "a1",
+    "stage": "action",
+    "op": {
+     "boundary": "sql",
+     "name": "insert:charges"
+    },
+    "inputs": {
+     "order": {
+      "kind": "slot",
+      "slot": "order"
+     }
+    },
+    "outputs": {},
+    "after": []
+   },
+   {
+    "id": "n2",
+    "actor": "a2",
+    "stage": "action",
+    "op": {
+     "boundary": "sql",
+     "name": "insert:charges"
+    },
+    "inputs": {
+     "order": {
+      "kind": "slot",
+      "slot": "order"
+     }
+    },
+    "outputs": {},
+    "after": []
+   }
+  ]
+ },
+ "observations": [
+  {
+   "id": "s1",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "1",
+   "phase": "completed",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "insert:charges"
+   },
+   "footprints": [
+    {
+     "ns": "shop-db.charges",
+     "access": "write",
+     "scope": {
+      "kind": "exact",
+      "keys": [
+       [
+        [
+         "int",
+         "42"
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "entities": [
+    {
+     "ns": "shop-db",
+     "kind": "order",
+     "key": [
+      [
+       "int",
+       "42"
+      ]
+     ]
+    }
+   ],
+   "values": {
+    "rows_affected": [
+     "int",
+     "1"
+    ]
+   },
+   "causes": [],
+   "observer": false,
+   "actor": "a1",
+   "action": "n1",
+   "txn": "x1"
+  },
+  {
+   "id": "s2",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "2",
+   "phase": "completed",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "insert:charges"
+   },
+   "footprints": [
+    {
+     "ns": "shop-db.charges",
+     "access": "write",
+     "scope": {
+      "kind": "exact",
+      "keys": [
+       [
+        [
+         "int",
+         "42"
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "entities": [
+    {
+     "ns": "shop-db",
+     "kind": "order",
+     "key": [
+      [
+       "int",
+       "42"
+      ]
+     ]
+    }
+   ],
+   "values": {
+    "rows_affected": [
+     "int",
+     "1"
+    ]
+   },
+   "causes": [],
+   "observer": false,
+   "actor": "a2",
+   "action": "n2",
+   "txn": "x2"
+  },
+  {
+   "id": "s3",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "3",
+   "phase": "aborted",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "rollback"
+   },
+   "footprints": [],
+   "entities": [],
+   "values": {},
+   "causes": [],
+   "observer": false,
+   "actor": "a1",
+   "action": "n1",
+   "txn": "x1"
+  },
+  {
+   "id": "s4",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "4",
+   "phase": "committed",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "commit"
+   },
+   "footprints": [],
+   "entities": [],
+   "values": {},
+   "causes": [],
+   "observer": false,
+   "actor": "a2",
+   "action": "n2",
+   "txn": "x2"
+  },
+  {
+   "id": "s5",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "5",
+   "phase": "completed",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "insert:charges"
+   },
+   "footprints": [
+    {
+     "ns": "shop-db.charges",
+     "access": "write",
+     "scope": {
+      "kind": "exact",
+      "keys": [
+       [
+        [
+         "int",
+         "43"
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "entities": [
+    {
+     "ns": "shop-db",
+     "kind": "order",
+     "key": [
+      [
+       "int",
+       "43"
+      ]
+     ]
+    }
+   ],
+   "values": {
+    "rows_affected": [
+     "int",
+     "1"
+    ]
+   },
+   "causes": [],
+   "observer": false,
+   "actor": "a1",
+   "action": "n1",
+   "txn": "x3"
+  },
+  {
+   "id": "s6",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "6",
+   "phase": "completed",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "insert:charges"
+   },
+   "footprints": [
+    {
+     "ns": "shop-db.charges",
+     "access": "write",
+     "scope": {
+      "kind": "exact",
+      "keys": [
+       [
+        [
+         "int",
+         "43"
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "entities": [
+    {
+     "ns": "shop-db",
+     "kind": "order",
+     "key": [
+      [
+       "int",
+       "43"
+      ]
+     ]
+    }
+   ],
+   "values": {
+    "rows_affected": [
+     "int",
+     "1"
+    ]
+   },
+   "causes": [],
+   "observer": false,
+   "actor": "a2",
+   "action": "n2",
+   "txn": "x4"
+  },
+  {
+   "id": "s7",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "7",
+   "phase": "committed",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "commit"
+   },
+   "footprints": [],
+   "entities": [],
+   "values": {},
+   "causes": [],
+   "observer": false,
+   "actor": "a1",
+   "action": "n1",
+   "txn": "x3"
+  },
+  {
+   "id": "s8",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "8",
+   "phase": "committed",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "commit"
+   },
+   "footprints": [],
+   "entities": [],
+   "values": {},
+   "causes": [],
+   "observer": false,
+   "actor": "a2",
+   "action": "n2",
+   "txn": "x4"
+  },
+  {
+   "id": "s9",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "9",
+   "phase": "completed",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "insert:charges"
+   },
+   "footprints": [
+    {
+     "ns": "shop-db.charges",
+     "access": "write",
+     "scope": {
+      "kind": "exact",
+      "keys": [
+       [
+        [
+         "int",
+         "44"
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "entities": [
+    {
+     "ns": "shop-db",
+     "kind": "order",
+     "key": [
+      [
+       "int",
+       "44"
+      ]
+     ]
+    }
+   ],
+   "values": {
+    "rows_affected": [
+     "int",
+     "1"
+    ]
+   },
+   "causes": [],
+   "observer": false,
+   "actor": "a1",
+   "action": "n1",
+   "txn": "x5"
+  },
+  {
+   "id": "s10",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "10",
+   "phase": "completed",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "insert:charges"
+   },
+   "footprints": [
+    {
+     "ns": "shop-db.charges",
+     "access": "write",
+     "scope": {
+      "kind": "exact",
+      "keys": [
+       [
+        [
+         "int",
+         "44"
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "entities": [
+    {
+     "ns": "shop-db",
+     "kind": "order",
+     "key": [
+      [
+       "int",
+       "44"
+      ]
+     ]
+    }
+   ],
+   "values": {
+    "rows_affected": [
+     "int",
+     "1"
+    ]
+   },
+   "causes": [],
+   "observer": false,
+   "actor": "a2",
+   "action": "n2",
+   "txn": "x6"
+  },
+  {
+   "id": "s11",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "11",
+   "phase": "committed",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "commit"
+   },
+   "footprints": [],
+   "entities": [],
+   "values": {},
+   "causes": [],
+   "observer": false,
+   "actor": "a1",
+   "action": "n1",
+   "txn": "x5"
+  },
+  {
+   "id": "s12",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "12",
+   "phase": "unknown_outcome",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "commit"
+   },
+   "footprints": [],
+   "entities": [],
+   "values": {},
+   "causes": [],
+   "observer": false,
+   "actor": "a2",
+   "action": "n2",
+   "txn": "x6"
+  },
+  {
+   "id": "s13",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "13",
+   "phase": "committed",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "insert:charges"
+   },
+   "footprints": [
+    {
+     "ns": "shop-db.charges",
+     "access": "write",
+     "scope": {
+      "kind": "exact",
+      "keys": [
+       [
+        [
+         "int",
+         "45"
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "entities": [
+    {
+     "ns": "shop-db",
+     "kind": "order",
+     "key": [
+      [
+       "int",
+       "45"
+      ]
+     ]
+    }
+   ],
+   "values": {
+    "rows_affected": [
+     "int",
+     "1"
+    ]
+   },
+   "causes": [],
+   "observer": false,
+   "actor": "a1",
+   "action": "n1"
+  },
+  {
+   "id": "s14",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "14",
+   "phase": "committed",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "insert:charges"
+   },
+   "footprints": [
+    {
+     "ns": "shop-db.charges",
+     "access": "write",
+     "scope": {
+      "kind": "exact",
+      "keys": [
+       [
+        [
+         "int",
+         "45"
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "entities": [
+    {
+     "ns": "shop-db",
+     "kind": "order",
+     "key": [
+      [
+       "int",
+       "45"
+      ]
+     ]
+    }
+   ],
+   "values": {
+    "rows_affected": [
+     "int",
+     "0"
+    ]
+   },
+   "causes": [],
+   "observer": false,
+   "actor": "a2",
+   "action": "n2"
+  },
+  {
+   "id": "s15",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "15",
+   "phase": "completed",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "insert:charges"
+   },
+   "footprints": [
+    {
+     "ns": "shop-db.charges",
+     "access": "write",
+     "scope": {
+      "kind": "exact",
+      "keys": [
+       [
+        [
+         "int",
+         "46"
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "entities": [
+    {
+     "ns": "shop-db",
+     "kind": "order",
+     "key": [
+      [
+       "int",
+       "46"
+      ]
+     ]
+    }
+   ],
+   "values": {
+    "rows_affected": [
+     "int",
+     "1"
+    ]
+   },
+   "causes": [],
+   "observer": false,
+   "actor": "a1",
+   "action": "n1",
+   "txn": "x7"
+  },
+  {
+   "id": "s16",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "16",
+   "phase": "aborted",
+   "source": "sql-gateway",
+   "op": {
+    "boundary": "sql",
+    "name": "rollback"
+   },
+   "footprints": [],
+   "entities": [],
+   "values": {},
+   "causes": [],
+   "observer": false,
+   "actor": "a1",
+   "action": "n1",
+   "txn": "x7"
+  },
+  {
+   "id": "q1",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "17",
+   "phase": "completed",
+   "source": "observer",
+   "op": {
+    "boundary": "sql",
+    "name": "select:charges"
+   },
+   "footprints": [],
+   "entities": [
+    {
+     "ns": "shop-db",
+     "kind": "order",
+     "key": [
+      [
+       "int",
+       "43"
+      ]
+     ]
+    }
+   ],
+   "values": {
+    "count": [
+     "int",
+     "2"
+    ]
+   },
+   "causes": [],
+   "observer": true
+  }
+ ],
+ "expectations": [
+  {
+   "rule": {
+    "kind": "at_most_once_effect",
+    "boundary": "sql",
+    "op": "insert:charges",
+    "entity_kind": "order"
+   },
+   "scope": {
+    "ns": "shop-db",
+    "kind": "order",
+    "key": [
+     [
+      "int",
+      "42"
+     ]
+    ]
+   },
+   "verdict": "satisfied_on_observed_execution"
+  },
+  {
+   "rule": {
+    "kind": "at_most_once_effect",
+    "boundary": "sql",
+    "op": "insert:charges",
+    "entity_kind": "order"
+   },
+   "scope": {
+    "ns": "shop-db",
+    "kind": "order",
+    "key": [
+     [
+      "int",
+      "43"
+     ]
+    ]
+   },
+   "verdict": "violated"
+  },
+  {
+   "rule": {
+    "kind": "at_most_once_effect",
+    "boundary": "sql",
+    "op": "insert:charges",
+    "entity_kind": "order"
+   },
+   "scope": {
+    "ns": "shop-db",
+    "kind": "order",
+    "key": [
+     [
+      "int",
+      "44"
+     ]
+    ]
+   },
+   "verdict": "unknown"
+  },
+  {
+   "rule": {
+    "kind": "at_most_once_effect",
+    "boundary": "sql",
+    "op": "insert:charges",
+    "entity_kind": "order"
+   },
+   "scope": {
+    "ns": "shop-db",
+    "kind": "order",
+    "key": [
+     [
+      "int",
+      "45"
+     ]
+    ]
+   },
+   "verdict": "satisfied_on_observed_execution"
+  },
+  {
+   "rule": {
+    "kind": "at_most_once_effect",
+    "boundary": "sql",
+    "op": "insert:charges",
+    "entity_kind": "order"
+   },
+   "scope": {
+    "ns": "shop-db",
+    "kind": "order",
+    "key": [
+     [
+      "int",
+      "46"
+     ]
+    ]
+   },
+   "verdict": "unexercised"
+  }
+ ]
+}

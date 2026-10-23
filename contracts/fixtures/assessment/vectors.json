@@ -1,0 +1,1332 @@
+{
+  "doc": "Assessment certificate vectors, shared by Rust, TypeScript and Python. manifests: each file decodes, re-encodes to bytes whose sha256 is canonical_sha256, its id is the content id and (Rust) it validates with the stated summary. codec_positive/codec_negative: as contracts/fixtures/vectors.json; a vector with `base` applies `ops` to that file first: [\"set\", pointer, value], [\"remove\", pointer] or [\"append\", pointer to a list, value]. schema: every language's decodeAssessment refuses with `refusal`. refusals: decode cleanly (after re-deriving the id when `reid`) but Rust validation refuses with exactly `codes`. bindings: Rust check_bindings against `expected` reports exactly `mismatches` ([binding, name]).",
+  "manifests": [
+    {
+      "id": "valid-mixed",
+      "file": "valid-mixed.json",
+      "assessment_id": "assessment:5d900dc8c7b0ef8b1301ba84e2737b7e679464e22dd6712261b9fa3bd47699fc",
+      "canonical_sha256": "sha256:420ff082e5484f64ac01dedb763f7999c00a968ce36e94a05b19773f44682442",
+      "summary": "violation_found",
+      "artifact": "example",
+      "signatures": 2
+    },
+    {
+      "id": "valid-incomplete",
+      "file": "valid-incomplete.json",
+      "assessment_id": "assessment:34f08c85b02eaac9a2cde825d93b5c35c4b17b3f54fd753413e01f1e2f9ff8ef",
+      "canonical_sha256": "sha256:8098e83e46c12168e6837bee83eb9f07fa30fba90e797b6ed7602c19153b546b",
+      "summary": "unknown_or_incomplete",
+      "artifact": "assessment",
+      "signatures": 0
+    },
+    {
+      "id": "valid-unsigned",
+      "file": "valid-unsigned.json",
+      "assessment_id": "assessment:c05b39c823d7ec7c686a0fef2122ba2f311f32df0e2ff4d0aaf4b900ab0abee7",
+      "canonical_sha256": "sha256:5d1c1445563687bb4d697ac0c994c4e73655e44808513d14816e751432e4d281",
+      "summary": "no_violation_observed_within_scope",
+      "artifact": "assessment",
+      "signatures": 0
+    },
+    {
+      "id": "valid-formal-model",
+      "file": "valid-formal-model.json",
+      "assessment_id": "assessment:fc0c759a3057fbb83c4a6fc2b071950a8fe07238c8f56f42e594f2c8f8ff191c",
+      "canonical_sha256": "sha256:0c31ec65480f98b1b57804a77239cf4b1146f727d295a626d231fe5666b4e90b",
+      "summary": "proved_for_declared_model",
+      "artifact": "example",
+      "signatures": 0
+    },
+    {
+      "id": "valid-redacted-derivative",
+      "file": "valid-redacted-derivative.json",
+      "assessment_id": "assessment:20235b6672ee166041e1c90bb5b27453c213d68059edeb7cf0c4df7adf60f039",
+      "canonical_sha256": "sha256:1271fa5b4fead35f0b6fe518ecb36004ff0f54f1f1fb18f607026eff10c13c92",
+      "summary": "no_violation_observed_within_scope",
+      "artifact": "redacted_derivative",
+      "signatures": 0
+    },
+    {
+      "id": "example-refund-agent",
+      "file": "example-refund-agent.json",
+      "assessment_id": "assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887",
+      "canonical_sha256": "sha256:65c33a1a905fbdf9657f225373e18e0ddb4872b6f84f51230735def95036ea70",
+      "summary": "violation_found",
+      "artifact": "example",
+      "signatures": 0
+    }
+  ],
+  "codec_positive": [
+    {
+      "id": "signature-entry",
+      "type": "AssessmentSignature",
+      "input": "{\"suite\":\"geo-ed25519/1\",\"algorithm\":\"ed25519\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"signature\":\"AAECAw==\"}",
+      "canonical": "{\"algorithm\":\"ed25519\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"signature\":\"AAECAw==\",\"suite\":\"geo-ed25519/1\"}"
+    },
+    {
+      "id": "signature-input",
+      "type": "AssessmentSignatureInput",
+      "input": "{\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"suite\":\"geo-ed25519/1\",\"algorithm\":\"ed25519\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "canonical": "{\"algorithm\":\"ed25519\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"suite\":\"geo-ed25519/1\"}"
+    },
+    {
+      "id": "status-issued",
+      "type": "AssessmentStatusEvent",
+      "input": "{\"v\":1,\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"seq\":\"1\",\"at_ms\":\"1792195200000\",\"actor\":\"geometer-examples\",\"change\":{\"kind\":\"issued\"},\"signatures\":[],\"hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+      "canonical": "{\"actor\":\"geometer-examples\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"at_ms\":\"1792195200000\",\"change\":{\"kind\":\"issued\"},\"hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"seq\":\"1\",\"signatures\":[],\"v\":1}"
+    },
+    {
+      "id": "status-superseded",
+      "type": "AssessmentStatusEvent",
+      "input": "{\"v\":1,\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"seq\":\"2\",\"at_ms\":\"1792195200000\",\"actor\":\"geometer-examples\",\"change\":{\"kind\":\"superseded\",\"successor\":\"assessment:c05b39c823d7ec7c686a0fef2122ba2f311f32df0e2ff4d0aaf4b900ab0abee7\",\"reason\":\"a newer assessment of the next revision\"},\"signatures\":[],\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+      "canonical": "{\"actor\":\"geometer-examples\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"at_ms\":\"1792195200000\",\"change\":{\"kind\":\"superseded\",\"reason\":\"a newer assessment of the next revision\",\"successor\":\"assessment:c05b39c823d7ec7c686a0fef2122ba2f311f32df0e2ff4d0aaf4b900ab0abee7\"},\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"seq\":\"2\",\"signatures\":[],\"v\":1}"
+    },
+    {
+      "id": "status-invalidated",
+      "type": "AssessmentStatusEvent",
+      "input": "{\"v\":1,\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"seq\":\"2\",\"at_ms\":\"1792195200000\",\"actor\":\"geometer-examples\",\"change\":{\"kind\":\"invalidated\",\"triggers\":[\"rule_changed\",\"config_changed\"],\"reason\":\"the rule's threshold changed\"},\"signatures\":[],\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+      "canonical": "{\"actor\":\"geometer-examples\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"at_ms\":\"1792195200000\",\"change\":{\"kind\":\"invalidated\",\"reason\":\"the rule's threshold changed\",\"triggers\":[\"rule_changed\",\"config_changed\"]},\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"seq\":\"2\",\"signatures\":[],\"v\":1}"
+    },
+    {
+      "id": "status-withdrawn",
+      "type": "AssessmentStatusEvent",
+      "input": "{\"v\":1,\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"seq\":\"2\",\"at_ms\":\"1792195200000\",\"actor\":\"geometer-examples\",\"change\":{\"kind\":\"withdrawn\",\"reason\":\"the issuer no longer stands behind the claim\"},\"signatures\":[],\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+      "canonical": "{\"actor\":\"geometer-examples\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"at_ms\":\"1792195200000\",\"change\":{\"kind\":\"withdrawn\",\"reason\":\"the issuer no longer stands behind the claim\"},\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"seq\":\"2\",\"signatures\":[],\"v\":1}"
+    },
+    {
+      "id": "status-snapshot",
+      "type": "AssessmentStatusSnapshot",
+      "input": "{\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"as_of_ms\":\"1792195300000\",\"source\":\"local status log\",\"events\":[{\"v\":1,\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"seq\":\"1\",\"at_ms\":\"1792195200000\",\"actor\":\"geometer-examples\",\"change\":{\"kind\":\"issued\"},\"signatures\":[],\"hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]}",
+      "canonical": "{\"as_of_ms\":\"1792195300000\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"events\":[{\"actor\":\"geometer-examples\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"at_ms\":\"1792195200000\",\"change\":{\"kind\":\"issued\"},\"hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"seq\":\"1\",\"signatures\":[],\"v\":1}],\"source\":\"local status log\"}"
+    },
+    {
+      "id": "standing-three-axes",
+      "type": "AssessmentStanding",
+      "input": "{\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"outcome\":\"violation_found\",\"integrity\":\"unsigned\",\"applicability\":\"status_unknown\",\"checked_ms\":\"1792195300000\",\"reasons\":[\"no signature\",\"no status snapshot\"]}",
+      "canonical": "{\"applicability\":\"status_unknown\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"checked_ms\":\"1792195300000\",\"integrity\":\"unsigned\",\"outcome\":\"violation_found\",\"reasons\":[\"no signature\",\"no status snapshot\"]}"
+    },
+    {
+      "id": "status-signature-input",
+      "type": "AssessmentStatusSignatureInput",
+      "input": "{\"record\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"suite\":\"geo-ed25519/1\",\"algorithm\":\"ed25519\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "canonical": "{\"algorithm\":\"ed25519\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"record\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"suite\":\"geo-ed25519/1\"}"
+    },
+    {
+      "id": "status-statement",
+      "type": "AssessmentStatusStatement",
+      "input": "{\"v\":1,\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"as_of_ms\":\"1792195300000\",\"events\":\"1\",\"head\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"signatures\":[{\"suite\":\"geo-ed25519/1\",\"algorithm\":\"ed25519\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"signature\":\"AAECAw==\"}]}",
+      "canonical": "{\"as_of_ms\":\"1792195300000\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"events\":\"1\",\"head\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"signatures\":[{\"algorithm\":\"ed25519\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"signature\":\"AAECAw==\",\"suite\":\"geo-ed25519/1\"}],\"v\":1}"
+    },
+    {
+      "id": "status-statement-empty-chain",
+      "type": "AssessmentStatusStatement",
+      "input": "{\"v\":1,\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"as_of_ms\":\"1792195300000\",\"events\":\"0\",\"signatures\":[]}",
+      "canonical": "{\"as_of_ms\":\"1792195300000\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"events\":\"0\",\"signatures\":[],\"v\":1}"
+    },
+    {
+      "id": "status-report",
+      "type": "AssessmentStatusReport",
+      "input": "{\"snapshot\":{\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"as_of_ms\":\"1792195300000\",\"source\":\"the issuer's status log\",\"events\":[{\"v\":1,\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"seq\":\"1\",\"at_ms\":\"1792195200000\",\"actor\":\"geometer-examples\",\"change\":{\"kind\":\"issued\"},\"signatures\":[],\"hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]},\"statement\":{\"v\":1,\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"as_of_ms\":\"1792195300000\",\"events\":\"1\",\"head\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"signatures\":[{\"suite\":\"geo-ed25519/1\",\"algorithm\":\"ed25519\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"signature\":\"AAECAw==\"}]}}",
+      "canonical": "{\"snapshot\":{\"as_of_ms\":\"1792195300000\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"events\":[{\"actor\":\"geometer-examples\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"at_ms\":\"1792195200000\",\"change\":{\"kind\":\"issued\"},\"hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"seq\":\"1\",\"signatures\":[],\"v\":1}],\"source\":\"the issuer's status log\"},\"statement\":{\"as_of_ms\":\"1792195300000\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"events\":\"1\",\"head\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"signatures\":[{\"algorithm\":\"ed25519\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"signature\":\"AAECAw==\",\"suite\":\"geo-ed25519/1\"}],\"v\":1}}"
+    },
+    {
+      "id": "trusted-key",
+      "type": "AssessmentTrustedKey",
+      "input": "{\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"suite\":\"geo-ed25519/1\",\"algorithm\":\"ed25519\",\"public_key\":\"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=\",\"label\":\"the issuer's key, from its own file\"}",
+      "canonical": "{\"algorithm\":\"ed25519\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"label\":\"the issuer's key, from its own file\",\"public_key\":\"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=\",\"suite\":\"geo-ed25519/1\"}"
+    },
+    {
+      "id": "trust-policy",
+      "type": "AssessmentTrustPolicy",
+      "input": "{\"id\":\"my-policy\",\"keys\":[{\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"suite\":\"geo-ed25519/1\",\"algorithm\":\"ed25519\",\"public_key\":\"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=\",\"label\":\"the issuer's key, from its own file\"}],\"key_log\":[],\"max_status_age_ms\":\"86400000\"}",
+      "canonical": "{\"id\":\"my-policy\",\"key_log\":[],\"keys\":[{\"algorithm\":\"ed25519\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"label\":\"the issuer's key, from its own file\",\"public_key\":\"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=\",\"suite\":\"geo-ed25519/1\"}],\"max_status_age_ms\":\"86400000\"}"
+    },
+    {
+      "id": "check-passed",
+      "type": "AssessmentCheck",
+      "input": "{\"check\":\"content_id\",\"result\":\"passed\",\"details\":[\"the id is the manifest's content id\"]}",
+      "canonical": "{\"check\":\"content_id\",\"details\":[\"the id is the manifest's content id\"],\"result\":\"passed\"}"
+    },
+    {
+      "id": "verification-three-axes-and-checks",
+      "type": "AssessmentVerification",
+      "input": "{\"v\":1,\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"standing\":{\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"outcome\":\"violation_found\",\"integrity\":\"unsigned\",\"applicability\":\"status_unknown\",\"checked_ms\":\"1792195300000\",\"reasons\":[\"no signature\",\"no status snapshot\"]},\"checks\":[{\"check\":\"content_id\",\"result\":\"passed\",\"details\":[\"the id is the manifest's content id\"]},{\"check\":\"signatures\",\"result\":\"limited\",\"details\":[\"no signature\"]},{\"check\":\"anchor_coverage\",\"result\":\"not_checked\",\"details\":[\"no anchor was supplied\"]}],\"trusted_keys\":[],\"anchors\":[],\"verifier\":\"geo-verify 0.1.0\",\"limits\":[\"verification does not rerun the assessment or judge whether its findings are true\"]}",
+      "canonical": "{\"anchors\":[],\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"checks\":[{\"check\":\"content_id\",\"details\":[\"the id is the manifest's content id\"],\"result\":\"passed\"},{\"check\":\"signatures\",\"details\":[\"no signature\"],\"result\":\"limited\"},{\"check\":\"anchor_coverage\",\"details\":[\"no anchor was supplied\"],\"result\":\"not_checked\"}],\"limits\":[\"verification does not rerun the assessment or judge whether its findings are true\"],\"standing\":{\"applicability\":\"status_unknown\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"checked_ms\":\"1792195300000\",\"integrity\":\"unsigned\",\"outcome\":\"violation_found\",\"reasons\":[\"no signature\",\"no status snapshot\"]},\"trusted_keys\":[],\"v\":1,\"verifier\":\"geo-verify 0.1.0\"}"
+    },
+    {
+      "id": "bundle-file-included",
+      "type": "AssessmentBundleFile",
+      "input": "{\"evidence\":\"rules-toml\",\"availability\":\"included\",\"path\":\"evidence/rules-toml\",\"digest\":\"sha256:21dc53d89680b5945dac162dcbc7e4f889fba35df2753b3a6c96f622ca87c147\",\"size\":\"523\",\"reason\":\"\"}",
+      "canonical": "{\"availability\":\"included\",\"digest\":\"sha256:21dc53d89680b5945dac162dcbc7e4f889fba35df2753b3a6c96f622ca87c147\",\"evidence\":\"rules-toml\",\"path\":\"evidence/rules-toml\",\"reason\":\"\",\"size\":\"523\"}"
+    },
+    {
+      "id": "provenance",
+      "type": "AssessmentProvenance",
+      "input": "{\"generator\":\"geometer\",\"version\":\"0.1.0\",\"check\":\"chk-1\",\"project\":\"p-1\",\"created_ms\":\"1792195200000\",\"inputs\":{\"explore-report\":\"sha256:1111111111111111111111111111111111111111111111111111111111111111\"},\"incomplete\":[],\"redactions\":[\"1 piece of text that looked like a key\"]}",
+      "canonical": "{\"check\":\"chk-1\",\"created_ms\":\"1792195200000\",\"generator\":\"geometer\",\"incomplete\":[],\"inputs\":{\"explore-report\":\"sha256:1111111111111111111111111111111111111111111111111111111111111111\"},\"project\":\"p-1\",\"redactions\":[\"1 piece of text that looked like a key\"],\"version\":\"0.1.0\"}"
+    },
+    {
+      "id": "renewal",
+      "type": "AssessmentRenewal",
+      "input": "{\"v\":1,\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"seq\":\"1\",\"evidence\":{\"r4-explore-cli-run\":\"sha256:02a7589e13e61de1da92539ec67542fab60bd593f2f76914d3242c4d953543df\",\"r4-agent-live-run\":\"sha256:b5f828f2f04904f202db231e1adfeae221b0cde427b9e6016206dd27e421b4c2\",\"rules-toml\":\"sha256:21dc53d89680b5945dac162dcbc7e4f889fba35df2753b3a6c96f622ca87c147\"},\"verification\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"integrity\":\"verified_against_trusted_inputs\",\"new_evidence\":{\"signature:geo-ed25519/1\":\"sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"},\"renewed_ms\":\"1792195400000\",\"actor\":\"geometer-examples\",\"signatures\":[],\"hash\":\"sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"}",
+      "canonical": "{\"actor\":\"geometer-examples\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"evidence\":{\"r4-agent-live-run\":\"sha256:b5f828f2f04904f202db231e1adfeae221b0cde427b9e6016206dd27e421b4c2\",\"r4-explore-cli-run\":\"sha256:02a7589e13e61de1da92539ec67542fab60bd593f2f76914d3242c4d953543df\",\"rules-toml\":\"sha256:21dc53d89680b5945dac162dcbc7e4f889fba35df2753b3a6c96f622ca87c147\"},\"hash\":\"sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"integrity\":\"verified_against_trusted_inputs\",\"new_evidence\":{\"signature:geo-ed25519/1\":\"sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"},\"renewed_ms\":\"1792195400000\",\"seq\":\"1\",\"signatures\":[],\"v\":1,\"verification\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}"
+    },
+    {
+      "id": "bundle",
+      "type": "AssessmentBundle",
+      "input": "{\"format\":\"geometer.assessment-bundle\",\"v\":1,\"assessment\":{\"id\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"manifest\":{\"artifact\":\"example\",\"assessed_from_ms\":\"1790874142326\",\"assessed_to_ms\":\"1790874197747\",\"claim\":{\"conditions\":[\"Only for the refund-agent sample at the stated revision.\",\"The tools are doubles; no real payment provider was used.\",\"The model is a scripted stand-in.\"],\"dependencies\":[\"r4-explore-cli-run\",\"rules-toml\"],\"invalidation\":[\"subject_changed\",\"rule_changed\",\"config_changed\",\"model_changed\"],\"kind\":\"bounded_assessment\",\"review\":\"unreviewed\",\"reviewers\":[],\"statement\":\"Example only. Within the sample's declared tasks, Explore's default budget and simulated tools, a double refund was found: refund-at-most-once was violated by a lost reply followed by a blind retry. The other two rules were not shown to hold: one result is unknown and one rule was not exercised. This is not proof that the agent is safe.\"},\"evidence\":[{\"digest\":\"sha256:02a7589e13e61de1da92539ec67542fab60bd593f2f76914d3242c4d953543df\",\"id\":\"r4-explore-cli-run\",\"location\":\"contracts/fixtures/assessment/evidence/r4-explore-cli-run.json\",\"note\":\"The record of the explore-cli test case run (it passed). It records that the case's tests passed, not the trial traces. Public excerpt: internal paths, command lines, runner names and commit ids were removed.\",\"payload\":\"present\",\"privacy\":\"public\",\"redactions\":[],\"required\":true,\"role\":\"qualification_run\",\"size\":\"1111\"},{\"digest\":\"sha256:b5f828f2f04904f202db231e1adfeae221b0cde427b9e6016206dd27e421b4c2\",\"id\":\"r4-agent-live-run\",\"location\":\"contracts/fixtures/assessment/evidence/r4-agent-live-run.json\",\"note\":\"The record of the agent-live test case run (it passed). Public excerpt: internal paths, command lines, runner names and commit ids were removed.\",\"payload\":\"present\",\"privacy\":\"public\",\"redactions\":[],\"required\":false,\"role\":\"qualification_run\",\"size\":\"1353\"},{\"digest\":\"sha256:21dc53d89680b5945dac162dcbc7e4f889fba35df2753b3a6c96f622ca87c147\",\"id\":\"rules-toml\",\"location\":\"contracts/fixtures/assessment/evidence/refund-agent-rules.toml\",\"note\":\"The sample's declared rules. Public excerpt: internal paths, command lines, runner names and commit ids were removed.\",\"payload\":\"present\",\"privacy\":\"public\",\"redactions\":[],\"required\":true,\"role\":\"rule_source\",\"size\":\"523\"}],\"findings\":[{\"actions\":[{\"description\":\"payments.refund for order o-1, refund request rr-1: the first attempt, whose reply was lost.\",\"dispatch\":\"dispatched\",\"effect\":\"confirmed\",\"evidence\":[\"r4-explore-cli-run\"]},{\"description\":\"payments.refund for the same order and refund request: the agent's blind retry.\",\"dispatch\":\"dispatched\",\"effect\":\"confirmed\",\"evidence\":[\"r4-explore-cli-run\"]}],\"assumptions\":[\"The payments double's ledger records every refund it applied.\",\"The cited run records are public excerpts with internal paths, command lines, runner names and commit ids removed. The runs were made on a cloud runner with a working tree recorded as dirty; the sample's files are assumed identical to revision 4e36eea, which was not checked against the runner's tree.\"],\"evidence\":[\"r4-explore-cli-run\",\"r4-agent-live-run\"],\"exclusions\":[\"The template rule for the payments-eu account is not part of this example.\"],\"fidelity\":\"simulated\",\"method\":\"explore-default\",\"outcome\":\"violation_found\",\"replay\":\"exact_within_envelope\",\"rule\":\"refund-at-most-once\",\"rule_digest\":\"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\",\"statement\":\"A lost reply followed by the agent's blind retry refunded the same refund request twice.\",\"unknowns\":[\"The trial record and the finding behind this example are not in the repository; only the run records are cited.\"],\"witnesses\":[]},{\"actions\":[],\"assumptions\":[],\"evidence\":[],\"exclusions\":[],\"fidelity\":\"simulated\",\"method\":\"explore-default\",\"outcome\":\"unknown_or_incomplete\",\"replay\":\"not_attempted\",\"rule\":\"mail-to-customers-only\",\"rule_digest\":\"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\",\"statement\":\"This example cites no trial that sent an email, so the rule's result is unknown.\",\"unknowns\":[\"No cited evidence shows whether any trial called mail.send.\"],\"witnesses\":[]},{\"actions\":[],\"assumptions\":[],\"evidence\":[],\"exclusions\":[],\"fidelity\":\"simulated\",\"method\":\"explore-default\",\"outcome\":\"not_exercised\",\"replay\":\"not_attempted\",\"rule\":\"large-refunds-need-approval\",\"rule_digest\":\"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\",\"statement\":\"No trial refunded more than 50.00 USD, so the rule's condition was never reached.\",\"unknowns\":[],\"witnesses\":[]}],\"issued_ms\":\"1792195200000\",\"issuer\":{\"generator\":\"written by hand for the C1 contract; not generated by Geometer\",\"id\":\"geometer-examples\",\"keys\":[],\"name\":\"Geometer contract examples (an example, not an issued assessment)\"},\"methods\":[{\"budget\":{\"depth\":8,\"permits\":\"216\",\"trials\":\"24\"},\"conditions\":[\"Tools are Geometer-controlled doubles (simulated fidelity).\",\"The model is a scripted stand-in.\",\"Faults offered: a lost reply on a tool call.\"],\"id\":\"explore-default\",\"inputs\":{\".geometer/tasks.toml\":\"sha256:403c33f5a6b5e9e3fd38b17c69922b78e3043f8fcc10155a34ff9741821eedfb\"},\"kind\":\"bounded_exploration\",\"sampling\":\"Exhaustive within the depth bound, then up to 4 seeded random walks if unfinished (Explore's defaults).\",\"seeds\":[\"0\"],\"strategy\":\"exhaustive\",\"termination\":[\"Not recorded in this example; see the cited run record.\"],\"unexercised_paths\":[\"Refunds above 50.00 USD (both declared tasks refund 10.00).\",\"The payments-eu account.\"],\"unexercised_rules\":[\"large-refunds-need-approval\"],\"verifier\":\"rules tool-effect evaluator\",\"version\":\"geometer 0.1.0\"}],\"notes\":[\"This is an example of the assessment format, written by hand from the refund-agent sample's real rules and tool contracts.\",\"It is not an issued assessment, it is unsigned, and its findings paraphrase the cited run records.\",\"The cited run records are public excerpts with internal paths, command lines, runner names and commit ids removed. The runs were made on a cloud runner with a working tree recorded as dirty; the sample's files are assumed identical to revision 4e36eea, which was not checked against the runner's tree.\"],\"rules\":[{\"bindings\":[{\"adapters\":[\"tool-gateway.payments\",\"tool-ledger.payments\"],\"coordination\":\"none (evaluated after the trial)\",\"failure\":\"unknown\",\"mode\":\"explore\",\"projection\":\"observer snapshots at baseline and final; gateway statement history\",\"rule\":\"refund-at-most-once\",\"rule_digest\":\"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\",\"support\":{\"kind\":\"supported\"}},{\"adapters\":[],\"coordination\":\"\",\"failure\":\"deny\",\"mode\":\"guard\",\"projection\":\"\",\"rule\":\"refund-at-most-once\",\"rule_digest\":\"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\",\"support\":{\"kind\":\"unsupported\",\"reason\":\"the Guard cannot decide this family from one call: needs an atomic reservation keyed by a ToolContract intent key, plus provider idempotency or reconciliation across commit/ack gaps\"}},{\"adapters\":[],\"coordination\":\"\",\"failure\":\"record_only\",\"mode\":\"prove\",\"projection\":\"\",\"rule\":\"refund-at-most-once\",\"rule_digest\":\"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\",\"support\":{\"kind\":\"unsupported\",\"reason\":\"the evidence ledger records calls, Guard decisions and receipts, but nothing evaluates this rule against ledger entries yet; Explore trial records are not a Prove record\"}}],\"exceptions\":[],\"owner\":\"refund-agent sample maintainers (example)\",\"preconditions\":[\"Applies to payments.refund calls; the identity is the tool contract's intent key (order_id, refund_request).\"],\"required\":true,\"reviews\":[],\"rule\":{\"digest\":\"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\",\"id\":\"refund-at-most-once\",\"intent\":\"approved_rule\",\"meaning\":{\"body\":{\"kind\":\"at_most_once_effect\",\"operation\":\"refund\",\"tool\":\"payments\"},\"evidence\":[\"statement_history\",\"effect_receipts\"],\"units\":{},\"unless\":[]},\"provenance\":\"declared in .geometer/rules.toml\"},\"statement\":\"Each refund request (one order and one refund request id) is refunded at most once.\",\"version\":\"1\"},{\"bindings\":[{\"adapters\":[\"tool-gateway.mail\",\"tool-ledger.mail\"],\"coordination\":\"none (evaluated after the trial)\",\"failure\":\"unknown\",\"mode\":\"explore\",\"projection\":\"observer snapshots at baseline and final; gateway statement history\",\"rule\":\"mail-to-customers-only\",\"rule_digest\":\"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\",\"support\":{\"kind\":\"supported\"}},{\"adapters\":[\"tool-gateway.mail\",\"tool-ledger.mail\"],\"coordination\":\"sandbox prototype: the tool's HTTP gateway decides each call before dispatch; not production enforcement\",\"failure\":\"deny\",\"mode\":\"guard\",\"projection\":\"\",\"rule\":\"mail-to-customers-only\",\"rule_digest\":\"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\",\"support\":{\"kind\":\"supported\"}},{\"adapters\":[],\"coordination\":\"\",\"failure\":\"record_only\",\"mode\":\"prove\",\"projection\":\"\",\"rule\":\"mail-to-customers-only\",\"rule_digest\":\"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\",\"support\":{\"kind\":\"unsupported\",\"reason\":\"the evidence ledger records calls, Guard decisions and receipts, but nothing evaluates this rule against ledger entries yet; Explore trial records are not a Prove record\"}}],\"exceptions\":[],\"owner\":\"refund-agent sample maintainers (example)\",\"preconditions\":[\"Applies to mail.send calls; checks the to field.\"],\"required\":true,\"reviews\":[],\"rule\":{\"digest\":\"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\",\"id\":\"mail-to-customers-only\",\"intent\":\"approved_rule\",\"meaning\":{\"body\":{\"allowed_suffixes\":[\"@customer.example\"],\"field\":\"to\",\"kind\":\"argument_allowlist\",\"operation\":\"send\",\"tool\":\"mail\"},\"evidence\":[\"statement_history\",\"effect_receipts\"],\"units\":{},\"unless\":[]},\"provenance\":\"declared in .geometer/rules.toml\"},\"statement\":\"The agent only emails addresses ending in @customer.example.\",\"version\":\"1\"},{\"bindings\":[{\"adapters\":[\"tool-gateway.payments\",\"tool-ledger.payments\"],\"coordination\":\"none (evaluated after the trial)\",\"failure\":\"unknown\",\"mode\":\"explore\",\"projection\":\"observer snapshots at baseline and final; gateway statement history\",\"rule\":\"large-refunds-need-approval\",\"rule_digest\":\"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\",\"support\":{\"kind\":\"supported\"}},{\"adapters\":[\"tool-gateway.payments\",\"tool-ledger.payments\"],\"coordination\":\"sandbox prototype: the tool's HTTP gateway decides each call before dispatch; not production enforcement\",\"failure\":\"deny\",\"mode\":\"guard\",\"projection\":\"\",\"rule\":\"large-refunds-need-approval\",\"rule_digest\":\"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\",\"support\":{\"kind\":\"supported\"}},{\"adapters\":[],\"coordination\":\"\",\"failure\":\"record_only\",\"mode\":\"prove\",\"projection\":\"\",\"rule\":\"large-refunds-need-approval\",\"rule_digest\":\"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\",\"support\":{\"kind\":\"unsupported\",\"reason\":\"the evidence ledger records calls, Guard decisions and receipts, but nothing evaluates this rule against ledger entries yet; Explore trial records are not a Prove record\"}}],\"exceptions\":[],\"owner\":\"refund-agent sample maintainers (example)\",\"preconditions\":[\"Applies to payments.refund calls whose amount is above 50.00 USD.\"],\"required\":true,\"reviews\":[],\"rule\":{\"digest\":\"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\",\"id\":\"large-refunds-need-approval\",\"intent\":\"approved_rule\",\"meaning\":{\"body\":{\"amount_field\":\"amount\",\"approval_field\":\"approval\",\"kind\":\"call_bound_approval\",\"operation\":\"refund\",\"threshold\":[\"dec\",\"50.00\"],\"tool\":\"payments\"},\"evidence\":[\"statement_history\",\"effect_receipts\"],\"units\":{\"amount\":\"USD\"},\"unless\":[]},\"provenance\":\"declared in .geometer/rules.toml\"},\"statement\":\"A refund above 50.00 USD must carry an approval for that exact call.\",\"version\":\"1\"}],\"schema\":\"geo_assessment_v1\",\"subject\":{\"boundary\":{\"covered\":[\"payments (payments.example) through its gateway and ledger\",\"mail (mail.example) through its gateway and ledger\",\"the model endpoint model.example (answered by the stand-in)\"],\"outside\":[\"the real payment provider (the payments tool is a double)\",\"the payments-eu account (no task uses it)\",\"anything the agents do without calling a declared tool\"],\"statement\":\"Only tool calls that pass through Geometer's tool gateways are observed and assessed.\"},\"config\":{\".geometer/rules.toml\":\"sha256:21dc53d89680b5945dac162dcbc7e4f889fba35df2753b3a6c96f622ca87c147\",\".geometer/tasks.toml\":\"sha256:403c33f5a6b5e9e3fd38b17c69922b78e3043f8fcc10155a34ff9741821eedfb\",\".geometer/tools.toml\":\"sha256:701dd4d556c7475f703f44effdacefc5003c04b977f48add717d54b517d28451\",\"compose.yaml\":\"sha256:6378c8d174514973dac3c991ef9272c8c1eb0875474d129af768e3f3d3b99077\"},\"dependencies\":{\"ts/package-lock.json\":\"sha256:0ed31137cc9fcecb35a6722f3c982e18358d19a837457df6dfa628411786139d\"},\"models\":[{\"note\":\"The agents ask for gpt-4o-mini at model.example; Geometer's scripted stand-in answers. No hosted model was called.\",\"pin\":{\"binding\":\"model\",\"model\":\"scripted:script\"},\"precision\":\"stand_in\"}],\"name\":\"Refund agent sample\",\"revision\":{\"digest\":\"sha256:f00404279b97e3b4bef3eaeb3ab03c6c280591288db31a89a5c7c49a8cf17491\",\"inputs\":[\".geometer/rules.toml\",\".geometer/tasks.toml\",\".geometer/tools.toml\",\"compose.yaml\",\"py/Dockerfile\",\"py/agent.py\",\"ts/Dockerfile\",\"ts/agent.mjs\",\"ts/package-lock.json\",\"ts/package.json\"],\"vcs\":{\"dirty\":false,\"revision\":\"4e36eea16e365f23e6c5350a747b167c10a46494\",\"system\":\"git\"}}},\"summary\":{\"incomplete_required\":[\"mail-to-customers-only\",\"large-refunds-need-approval\"],\"missing_evidence\":[],\"no_violation_observed\":[],\"not_exercised\":[\"large-refunds-need-approval\"],\"outcome\":\"violation_found\",\"proved\":[],\"unknown_or_incomplete\":[\"mail-to-customers-only\"],\"violation_found\":[\"refund-at-most-once\"]},\"verification\":{\"policy\":\"geo-assessment-policy/unsigned-example\",\"required_suites\":[],\"status\":[]}},\"signatures\":[]},\"files\":[{\"evidence\":\"rules-toml\",\"availability\":\"included\",\"path\":\"evidence/rules-toml\",\"digest\":\"sha256:21dc53d89680b5945dac162dcbc7e4f889fba35df2753b3a6c96f622ca87c147\",\"size\":\"523\",\"reason\":\"\"},{\"evidence\":\"r4-explore-cli-run\",\"availability\":\"withheld_private\",\"reason\":\"private; not part of this export\"},{\"evidence\":\"r4-agent-live-run\",\"availability\":\"deleted\",\"reason\":\"removed from the store after issuance\"}],\"statement\":{\"v\":1,\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"as_of_ms\":\"1792195300000\",\"events\":\"1\",\"head\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"signatures\":[{\"suite\":\"geo-ed25519/1\",\"algorithm\":\"ed25519\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"signature\":\"AAECAw==\"}]},\"renewals\":[],\"key_hints\":[{\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"suite\":\"geo-ed25519/1\",\"algorithm\":\"ed25519\",\"public_key\":\"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=\",\"label\":\"the issuer's key, from its own file\"}],\"key_log\":[],\"exported_ms\":\"1792195500000\",\"notes\":[\"An example bundle for the codec vectors; not an export of a real assessment.\"]}",
+      "canonical": "{\"assessment\":{\"id\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"manifest\":{\"artifact\":\"example\",\"assessed_from_ms\":\"1790874142326\",\"assessed_to_ms\":\"1790874197747\",\"claim\":{\"conditions\":[\"Only for the refund-agent sample at the stated revision.\",\"The tools are doubles; no real payment provider was used.\",\"The model is a scripted stand-in.\"],\"dependencies\":[\"r4-explore-cli-run\",\"rules-toml\"],\"invalidation\":[\"subject_changed\",\"rule_changed\",\"config_changed\",\"model_changed\"],\"kind\":\"bounded_assessment\",\"review\":\"unreviewed\",\"reviewers\":[],\"statement\":\"Example only. Within the sample's declared tasks, Explore's default budget and simulated tools, a double refund was found: refund-at-most-once was violated by a lost reply followed by a blind retry. The other two rules were not shown to hold: one result is unknown and one rule was not exercised. This is not proof that the agent is safe.\"},\"evidence\":[{\"digest\":\"sha256:02a7589e13e61de1da92539ec67542fab60bd593f2f76914d3242c4d953543df\",\"id\":\"r4-explore-cli-run\",\"location\":\"contracts/fixtures/assessment/evidence/r4-explore-cli-run.json\",\"note\":\"The record of the explore-cli test case run (it passed). It records that the case's tests passed, not the trial traces. Public excerpt: internal paths, command lines, runner names and commit ids were removed.\",\"payload\":\"present\",\"privacy\":\"public\",\"redactions\":[],\"required\":true,\"role\":\"qualification_run\",\"size\":\"1111\"},{\"digest\":\"sha256:b5f828f2f04904f202db231e1adfeae221b0cde427b9e6016206dd27e421b4c2\",\"id\":\"r4-agent-live-run\",\"location\":\"contracts/fixtures/assessment/evidence/r4-agent-live-run.json\",\"note\":\"The record of the agent-live test case run (it passed). Public excerpt: internal paths, command lines, runner names and commit ids were removed.\",\"payload\":\"present\",\"privacy\":\"public\",\"redactions\":[],\"required\":false,\"role\":\"qualification_run\",\"size\":\"1353\"},{\"digest\":\"sha256:21dc53d89680b5945dac162dcbc7e4f889fba35df2753b3a6c96f622ca87c147\",\"id\":\"rules-toml\",\"location\":\"contracts/fixtures/assessment/evidence/refund-agent-rules.toml\",\"note\":\"The sample's declared rules. Public excerpt: internal paths, command lines, runner names and commit ids were removed.\",\"payload\":\"present\",\"privacy\":\"public\",\"redactions\":[],\"required\":true,\"role\":\"rule_source\",\"size\":\"523\"}],\"findings\":[{\"actions\":[{\"description\":\"payments.refund for order o-1, refund request rr-1: the first attempt, whose reply was lost.\",\"dispatch\":\"dispatched\",\"effect\":\"confirmed\",\"evidence\":[\"r4-explore-cli-run\"]},{\"description\":\"payments.refund for the same order and refund request: the agent's blind retry.\",\"dispatch\":\"dispatched\",\"effect\":\"confirmed\",\"evidence\":[\"r4-explore-cli-run\"]}],\"assumptions\":[\"The payments double's ledger records every refund it applied.\",\"The cited run records are public excerpts with internal paths, command lines, runner names and commit ids removed. The runs were made on a cloud runner with a working tree recorded as dirty; the sample's files are assumed identical to revision 4e36eea, which was not checked against the runner's tree.\"],\"evidence\":[\"r4-explore-cli-run\",\"r4-agent-live-run\"],\"exclusions\":[\"The template rule for the payments-eu account is not part of this example.\"],\"fidelity\":\"simulated\",\"method\":\"explore-default\",\"outcome\":\"violation_found\",\"replay\":\"exact_within_envelope\",\"rule\":\"refund-at-most-once\",\"rule_digest\":\"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\",\"statement\":\"A lost reply followed by the agent's blind retry refunded the same refund request twice.\",\"unknowns\":[\"The trial record and the finding behind this example are not in the repository; only the run records are cited.\"],\"witnesses\":[]},{\"actions\":[],\"assumptions\":[],\"evidence\":[],\"exclusions\":[],\"fidelity\":\"simulated\",\"method\":\"explore-default\",\"outcome\":\"unknown_or_incomplete\",\"replay\":\"not_attempted\",\"rule\":\"mail-to-customers-only\",\"rule_digest\":\"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\",\"statement\":\"This example cites no trial that sent an email, so the rule's result is unknown.\",\"unknowns\":[\"No cited evidence shows whether any trial called mail.send.\"],\"witnesses\":[]},{\"actions\":[],\"assumptions\":[],\"evidence\":[],\"exclusions\":[],\"fidelity\":\"simulated\",\"method\":\"explore-default\",\"outcome\":\"not_exercised\",\"replay\":\"not_attempted\",\"rule\":\"large-refunds-need-approval\",\"rule_digest\":\"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\",\"statement\":\"No trial refunded more than 50.00 USD, so the rule's condition was never reached.\",\"unknowns\":[],\"witnesses\":[]}],\"issued_ms\":\"1792195200000\",\"issuer\":{\"generator\":\"written by hand for the C1 contract; not generated by Geometer\",\"id\":\"geometer-examples\",\"keys\":[],\"name\":\"Geometer contract examples (an example, not an issued assessment)\"},\"methods\":[{\"budget\":{\"depth\":8,\"permits\":\"216\",\"trials\":\"24\"},\"conditions\":[\"Tools are Geometer-controlled doubles (simulated fidelity).\",\"The model is a scripted stand-in.\",\"Faults offered: a lost reply on a tool call.\"],\"id\":\"explore-default\",\"inputs\":{\".geometer/tasks.toml\":\"sha256:403c33f5a6b5e9e3fd38b17c69922b78e3043f8fcc10155a34ff9741821eedfb\"},\"kind\":\"bounded_exploration\",\"sampling\":\"Exhaustive within the depth bound, then up to 4 seeded random walks if unfinished (Explore's defaults).\",\"seeds\":[\"0\"],\"strategy\":\"exhaustive\",\"termination\":[\"Not recorded in this example; see the cited run record.\"],\"unexercised_paths\":[\"Refunds above 50.00 USD (both declared tasks refund 10.00).\",\"The payments-eu account.\"],\"unexercised_rules\":[\"large-refunds-need-approval\"],\"verifier\":\"rules tool-effect evaluator\",\"version\":\"geometer 0.1.0\"}],\"notes\":[\"This is an example of the assessment format, written by hand from the refund-agent sample's real rules and tool contracts.\",\"It is not an issued assessment, it is unsigned, and its findings paraphrase the cited run records.\",\"The cited run records are public excerpts with internal paths, command lines, runner names and commit ids removed. The runs were made on a cloud runner with a working tree recorded as dirty; the sample's files are assumed identical to revision 4e36eea, which was not checked against the runner's tree.\"],\"rules\":[{\"bindings\":[{\"adapters\":[\"tool-gateway.payments\",\"tool-ledger.payments\"],\"coordination\":\"none (evaluated after the trial)\",\"failure\":\"unknown\",\"mode\":\"explore\",\"projection\":\"observer snapshots at baseline and final; gateway statement history\",\"rule\":\"refund-at-most-once\",\"rule_digest\":\"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\",\"support\":{\"kind\":\"supported\"}},{\"adapters\":[],\"coordination\":\"\",\"failure\":\"deny\",\"mode\":\"guard\",\"projection\":\"\",\"rule\":\"refund-at-most-once\",\"rule_digest\":\"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\",\"support\":{\"kind\":\"unsupported\",\"reason\":\"the Guard cannot decide this family from one call: needs an atomic reservation keyed by a ToolContract intent key, plus provider idempotency or reconciliation across commit/ack gaps\"}},{\"adapters\":[],\"coordination\":\"\",\"failure\":\"record_only\",\"mode\":\"prove\",\"projection\":\"\",\"rule\":\"refund-at-most-once\",\"rule_digest\":\"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\",\"support\":{\"kind\":\"unsupported\",\"reason\":\"the evidence ledger records calls, Guard decisions and receipts, but nothing evaluates this rule against ledger entries yet; Explore trial records are not a Prove record\"}}],\"exceptions\":[],\"owner\":\"refund-agent sample maintainers (example)\",\"preconditions\":[\"Applies to payments.refund calls; the identity is the tool contract's intent key (order_id, refund_request).\"],\"required\":true,\"reviews\":[],\"rule\":{\"digest\":\"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\",\"id\":\"refund-at-most-once\",\"intent\":\"approved_rule\",\"meaning\":{\"body\":{\"kind\":\"at_most_once_effect\",\"operation\":\"refund\",\"tool\":\"payments\"},\"evidence\":[\"statement_history\",\"effect_receipts\"],\"units\":{},\"unless\":[]},\"provenance\":\"declared in .geometer/rules.toml\"},\"statement\":\"Each refund request (one order and one refund request id) is refunded at most once.\",\"version\":\"1\"},{\"bindings\":[{\"adapters\":[\"tool-gateway.mail\",\"tool-ledger.mail\"],\"coordination\":\"none (evaluated after the trial)\",\"failure\":\"unknown\",\"mode\":\"explore\",\"projection\":\"observer snapshots at baseline and final; gateway statement history\",\"rule\":\"mail-to-customers-only\",\"rule_digest\":\"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\",\"support\":{\"kind\":\"supported\"}},{\"adapters\":[\"tool-gateway.mail\",\"tool-ledger.mail\"],\"coordination\":\"sandbox prototype: the tool's HTTP gateway decides each call before dispatch; not production enforcement\",\"failure\":\"deny\",\"mode\":\"guard\",\"projection\":\"\",\"rule\":\"mail-to-customers-only\",\"rule_digest\":\"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\",\"support\":{\"kind\":\"supported\"}},{\"adapters\":[],\"coordination\":\"\",\"failure\":\"record_only\",\"mode\":\"prove\",\"projection\":\"\",\"rule\":\"mail-to-customers-only\",\"rule_digest\":\"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\",\"support\":{\"kind\":\"unsupported\",\"reason\":\"the evidence ledger records calls, Guard decisions and receipts, but nothing evaluates this rule against ledger entries yet; Explore trial records are not a Prove record\"}}],\"exceptions\":[],\"owner\":\"refund-agent sample maintainers (example)\",\"preconditions\":[\"Applies to mail.send calls; checks the to field.\"],\"required\":true,\"reviews\":[],\"rule\":{\"digest\":\"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\",\"id\":\"mail-to-customers-only\",\"intent\":\"approved_rule\",\"meaning\":{\"body\":{\"allowed_suffixes\":[\"@customer.example\"],\"field\":\"to\",\"kind\":\"argument_allowlist\",\"operation\":\"send\",\"tool\":\"mail\"},\"evidence\":[\"statement_history\",\"effect_receipts\"],\"units\":{},\"unless\":[]},\"provenance\":\"declared in .geometer/rules.toml\"},\"statement\":\"The agent only emails addresses ending in @customer.example.\",\"version\":\"1\"},{\"bindings\":[{\"adapters\":[\"tool-gateway.payments\",\"tool-ledger.payments\"],\"coordination\":\"none (evaluated after the trial)\",\"failure\":\"unknown\",\"mode\":\"explore\",\"projection\":\"observer snapshots at baseline and final; gateway statement history\",\"rule\":\"large-refunds-need-approval\",\"rule_digest\":\"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\",\"support\":{\"kind\":\"supported\"}},{\"adapters\":[\"tool-gateway.payments\",\"tool-ledger.payments\"],\"coordination\":\"sandbox prototype: the tool's HTTP gateway decides each call before dispatch; not production enforcement\",\"failure\":\"deny\",\"mode\":\"guard\",\"projection\":\"\",\"rule\":\"large-refunds-need-approval\",\"rule_digest\":\"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\",\"support\":{\"kind\":\"supported\"}},{\"adapters\":[],\"coordination\":\"\",\"failure\":\"record_only\",\"mode\":\"prove\",\"projection\":\"\",\"rule\":\"large-refunds-need-approval\",\"rule_digest\":\"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\",\"support\":{\"kind\":\"unsupported\",\"reason\":\"the evidence ledger records calls, Guard decisions and receipts, but nothing evaluates this rule against ledger entries yet; Explore trial records are not a Prove record\"}}],\"exceptions\":[],\"owner\":\"refund-agent sample maintainers (example)\",\"preconditions\":[\"Applies to payments.refund calls whose amount is above 50.00 USD.\"],\"required\":true,\"reviews\":[],\"rule\":{\"digest\":\"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\",\"id\":\"large-refunds-need-approval\",\"intent\":\"approved_rule\",\"meaning\":{\"body\":{\"amount_field\":\"amount\",\"approval_field\":\"approval\",\"kind\":\"call_bound_approval\",\"operation\":\"refund\",\"threshold\":[\"dec\",\"50.00\"],\"tool\":\"payments\"},\"evidence\":[\"statement_history\",\"effect_receipts\"],\"units\":{\"amount\":\"USD\"},\"unless\":[]},\"provenance\":\"declared in .geometer/rules.toml\"},\"statement\":\"A refund above 50.00 USD must carry an approval for that exact call.\",\"version\":\"1\"}],\"schema\":\"geo_assessment_v1\",\"subject\":{\"boundary\":{\"covered\":[\"payments (payments.example) through its gateway and ledger\",\"mail (mail.example) through its gateway and ledger\",\"the model endpoint model.example (answered by the stand-in)\"],\"outside\":[\"the real payment provider (the payments tool is a double)\",\"the payments-eu account (no task uses it)\",\"anything the agents do without calling a declared tool\"],\"statement\":\"Only tool calls that pass through Geometer's tool gateways are observed and assessed.\"},\"config\":{\".geometer/rules.toml\":\"sha256:21dc53d89680b5945dac162dcbc7e4f889fba35df2753b3a6c96f622ca87c147\",\".geometer/tasks.toml\":\"sha256:403c33f5a6b5e9e3fd38b17c69922b78e3043f8fcc10155a34ff9741821eedfb\",\".geometer/tools.toml\":\"sha256:701dd4d556c7475f703f44effdacefc5003c04b977f48add717d54b517d28451\",\"compose.yaml\":\"sha256:6378c8d174514973dac3c991ef9272c8c1eb0875474d129af768e3f3d3b99077\"},\"dependencies\":{\"ts/package-lock.json\":\"sha256:0ed31137cc9fcecb35a6722f3c982e18358d19a837457df6dfa628411786139d\"},\"models\":[{\"note\":\"The agents ask for gpt-4o-mini at model.example; Geometer's scripted stand-in answers. No hosted model was called.\",\"pin\":{\"binding\":\"model\",\"model\":\"scripted:script\"},\"precision\":\"stand_in\"}],\"name\":\"Refund agent sample\",\"revision\":{\"digest\":\"sha256:f00404279b97e3b4bef3eaeb3ab03c6c280591288db31a89a5c7c49a8cf17491\",\"inputs\":[\".geometer/rules.toml\",\".geometer/tasks.toml\",\".geometer/tools.toml\",\"compose.yaml\",\"py/Dockerfile\",\"py/agent.py\",\"ts/Dockerfile\",\"ts/agent.mjs\",\"ts/package-lock.json\",\"ts/package.json\"],\"vcs\":{\"dirty\":false,\"revision\":\"4e36eea16e365f23e6c5350a747b167c10a46494\",\"system\":\"git\"}}},\"summary\":{\"incomplete_required\":[\"mail-to-customers-only\",\"large-refunds-need-approval\"],\"missing_evidence\":[],\"no_violation_observed\":[],\"not_exercised\":[\"large-refunds-need-approval\"],\"outcome\":\"violation_found\",\"proved\":[],\"unknown_or_incomplete\":[\"mail-to-customers-only\"],\"violation_found\":[\"refund-at-most-once\"]},\"verification\":{\"policy\":\"geo-assessment-policy/unsigned-example\",\"required_suites\":[],\"status\":[]}},\"signatures\":[]},\"exported_ms\":\"1792195500000\",\"files\":[{\"availability\":\"included\",\"digest\":\"sha256:21dc53d89680b5945dac162dcbc7e4f889fba35df2753b3a6c96f622ca87c147\",\"evidence\":\"rules-toml\",\"path\":\"evidence/rules-toml\",\"reason\":\"\",\"size\":\"523\"},{\"availability\":\"withheld_private\",\"evidence\":\"r4-explore-cli-run\",\"reason\":\"private; not part of this export\"},{\"availability\":\"deleted\",\"evidence\":\"r4-agent-live-run\",\"reason\":\"removed from the store after issuance\"}],\"format\":\"geometer.assessment-bundle\",\"key_hints\":[{\"algorithm\":\"ed25519\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"label\":\"the issuer's key, from its own file\",\"public_key\":\"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=\",\"suite\":\"geo-ed25519/1\"}],\"key_log\":[],\"notes\":[\"An example bundle for the codec vectors; not an export of a real assessment.\"],\"renewals\":[],\"statement\":{\"as_of_ms\":\"1792195300000\",\"assessment\":\"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\",\"events\":\"1\",\"head\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"signatures\":[{\"algorithm\":\"ed25519\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"signature\":\"AAECAw==\",\"suite\":\"geo-ed25519/1\"}],\"v\":1},\"v\":1}"
+    }
+  ],
+  "codec_negative": [
+    {
+      "id": "standing-unknown-integrity",
+      "type": "AssessmentStanding",
+      "error": "unknown_variant",
+      "input": "{\"assessment\": \"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\", \"outcome\": \"violation_found\", \"integrity\": \"trusted\", \"applicability\": \"status_unknown\", \"checked_ms\": \"1\", \"reasons\": []}"
+    },
+    {
+      "id": "standing-combined-badge",
+      "type": "AssessmentStanding",
+      "error": "unknown_field",
+      "input": "{\"assessment\": \"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\", \"outcome\": \"violation_found\", \"integrity\": \"unsigned\", \"applicability\": \"status_unknown\", \"checked_ms\": \"1\", \"reasons\": [], \"badge\": \"green\"}"
+    },
+    {
+      "id": "status-key-revocation-is-not-a-status-change",
+      "type": "AssessmentStatusEvent",
+      "error": "unknown_variant",
+      "input": "{\"v\": 1, \"assessment\": \"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\", \"seq\": \"1\", \"at_ms\": \"1792195200000\", \"actor\": \"geometer-examples\", \"change\": {\"kind\": \"key_revoked\"}, \"signatures\": [], \"hash\": \"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}"
+    },
+    {
+      "id": "status-seq-as-number",
+      "type": "AssessmentStatusEvent",
+      "error": "type",
+      "input": "{\"v\": 1, \"assessment\": \"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\", \"seq\": 1, \"at_ms\": \"1792195200000\", \"actor\": \"geometer-examples\", \"change\": {\"kind\": \"issued\"}, \"signatures\": [], \"hash\": \"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}"
+    },
+    {
+      "id": "signature-not-base64",
+      "type": "AssessmentSignature",
+      "error": "non_canonical",
+      "input": "{\"suite\": \"geo-ed25519/1\", \"algorithm\": \"ed25519\", \"key\": \"key:x\", \"signature\": \"not base64!\"}"
+    },
+    {
+      "id": "check-unknown-kind",
+      "type": "AssessmentCheck",
+      "error": "unknown_variant",
+      "input": "{\"check\": \"truth\", \"result\": \"passed\", \"details\": [\"the id is the manifest's content id\"]}"
+    },
+    {
+      "id": "check-unknown-result",
+      "type": "AssessmentCheck",
+      "error": "unknown_variant",
+      "input": "{\"check\": \"content_id\", \"result\": \"green\", \"details\": [\"the id is the manifest's content id\"]}"
+    },
+    {
+      "id": "verification-combined-badge",
+      "type": "AssessmentVerification",
+      "error": "unknown_field",
+      "input": "{\"v\": 1, \"assessment\": \"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\", \"standing\": {\"assessment\": \"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\", \"outcome\": \"violation_found\", \"integrity\": \"unsigned\", \"applicability\": \"status_unknown\", \"checked_ms\": \"1792195300000\", \"reasons\": [\"no signature\", \"no status snapshot\"]}, \"checks\": [{\"check\": \"content_id\", \"result\": \"passed\", \"details\": [\"the id is the manifest's content id\"]}, {\"check\": \"signatures\", \"result\": \"limited\", \"details\": [\"no signature\"]}, {\"check\": \"anchor_coverage\", \"result\": \"not_checked\", \"details\": [\"no anchor was supplied\"]}], \"trusted_keys\": [], \"anchors\": [], \"verifier\": \"geo-verify 0.1.0\", \"limits\": [\"verification does not rerun the assessment or judge whether its findings are true\"], \"badge\": \"green\"}"
+    },
+    {
+      "id": "verification-missing-standing",
+      "type": "AssessmentVerification",
+      "error": "missing_field",
+      "input": "{\"v\": 1, \"assessment\": \"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\", \"checks\": [{\"check\": \"content_id\", \"result\": \"passed\", \"details\": [\"the id is the manifest's content id\"]}, {\"check\": \"signatures\", \"result\": \"limited\", \"details\": [\"no signature\"]}, {\"check\": \"anchor_coverage\", \"result\": \"not_checked\", \"details\": [\"no anchor was supplied\"]}], \"trusted_keys\": [], \"anchors\": [], \"verifier\": \"geo-verify 0.1.0\", \"limits\": [\"verification does not rerun the assessment or judge whether its findings are true\"]}"
+    },
+    {
+      "id": "bundle-file-unknown-availability",
+      "type": "AssessmentBundleFile",
+      "error": "unknown_variant",
+      "input": "{\"evidence\": \"rules-toml\", \"availability\": \"maybe\", \"path\": \"evidence/rules-toml\", \"digest\": \"sha256:21dc53d89680b5945dac162dcbc7e4f889fba35df2753b3a6c96f622ca87c147\", \"size\": \"523\", \"reason\": \"\"}"
+    },
+    {
+      "id": "trusted-key-not-base64",
+      "type": "AssessmentTrustedKey",
+      "error": "non_canonical",
+      "input": "{\"key\": \"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\", \"suite\": \"geo-ed25519/1\", \"algorithm\": \"ed25519\", \"public_key\": \"not base64!\", \"label\": \"the issuer's key, from its own file\"}"
+    },
+    {
+      "id": "statement-time-as-number",
+      "type": "AssessmentStatusStatement",
+      "error": "type",
+      "input": "{\"v\": 1, \"assessment\": \"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\", \"as_of_ms\": 1792195300000, \"events\": \"1\", \"head\": \"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\", \"signatures\": [{\"suite\": \"geo-ed25519/1\", \"algorithm\": \"ed25519\", \"key\": \"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\", \"signature\": \"AAECAw==\"}]}"
+    },
+    {
+      "id": "renewal-unknown-integrity",
+      "type": "AssessmentRenewal",
+      "error": "unknown_variant",
+      "input": "{\"v\": 1, \"assessment\": \"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\", \"seq\": \"1\", \"evidence\": {\"r4-explore-cli-run\": \"sha256:02a7589e13e61de1da92539ec67542fab60bd593f2f76914d3242c4d953543df\", \"r4-agent-live-run\": \"sha256:b5f828f2f04904f202db231e1adfeae221b0cde427b9e6016206dd27e421b4c2\", \"rules-toml\": \"sha256:21dc53d89680b5945dac162dcbc7e4f889fba35df2753b3a6c96f622ca87c147\"}, \"verification\": \"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\", \"integrity\": \"trusted\", \"new_evidence\": {\"signature:geo-ed25519/1\": \"sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}, \"renewed_ms\": \"1792195400000\", \"actor\": \"geometer-examples\", \"signatures\": [], \"hash\": \"sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"}"
+    },
+    {
+      "id": "bundle-missing-files",
+      "type": "AssessmentBundle",
+      "error": "missing_field",
+      "input": "{\"format\": \"geometer.assessment-bundle\", \"v\": 1, \"assessment\": {\"id\": \"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\", \"manifest\": {\"artifact\": \"example\", \"assessed_from_ms\": \"1790874142326\", \"assessed_to_ms\": \"1790874197747\", \"claim\": {\"conditions\": [\"Only for the refund-agent sample at the stated revision.\", \"The tools are doubles; no real payment provider was used.\", \"The model is a scripted stand-in.\"], \"dependencies\": [\"r4-explore-cli-run\", \"rules-toml\"], \"invalidation\": [\"subject_changed\", \"rule_changed\", \"config_changed\", \"model_changed\"], \"kind\": \"bounded_assessment\", \"review\": \"unreviewed\", \"reviewers\": [], \"statement\": \"Example only. Within the sample's declared tasks, Explore's default budget and simulated tools, a double refund was found: refund-at-most-once was violated by a lost reply followed by a blind retry. The other two rules were not shown to hold: one result is unknown and one rule was not exercised. This is not proof that the agent is safe.\"}, \"evidence\": [{\"digest\": \"sha256:02a7589e13e61de1da92539ec67542fab60bd593f2f76914d3242c4d953543df\", \"id\": \"r4-explore-cli-run\", \"location\": \"contracts/fixtures/assessment/evidence/r4-explore-cli-run.json\", \"note\": \"The record of the explore-cli test case run (it passed). It records that the case's tests passed, not the trial traces. Public excerpt: internal paths, command lines, runner names and commit ids were removed.\", \"payload\": \"present\", \"privacy\": \"public\", \"redactions\": [], \"required\": true, \"role\": \"qualification_run\", \"size\": \"1111\"}, {\"digest\": \"sha256:b5f828f2f04904f202db231e1adfeae221b0cde427b9e6016206dd27e421b4c2\", \"id\": \"r4-agent-live-run\", \"location\": \"contracts/fixtures/assessment/evidence/r4-agent-live-run.json\", \"note\": \"The record of the agent-live test case run (it passed). Public excerpt: internal paths, command lines, runner names and commit ids were removed.\", \"payload\": \"present\", \"privacy\": \"public\", \"redactions\": [], \"required\": false, \"role\": \"qualification_run\", \"size\": \"1353\"}, {\"digest\": \"sha256:21dc53d89680b5945dac162dcbc7e4f889fba35df2753b3a6c96f622ca87c147\", \"id\": \"rules-toml\", \"location\": \"contracts/fixtures/assessment/evidence/refund-agent-rules.toml\", \"note\": \"The sample's declared rules. Public excerpt: internal paths, command lines, runner names and commit ids were removed.\", \"payload\": \"present\", \"privacy\": \"public\", \"redactions\": [], \"required\": true, \"role\": \"rule_source\", \"size\": \"523\"}], \"findings\": [{\"actions\": [{\"description\": \"payments.refund for order o-1, refund request rr-1: the first attempt, whose reply was lost.\", \"dispatch\": \"dispatched\", \"effect\": \"confirmed\", \"evidence\": [\"r4-explore-cli-run\"]}, {\"description\": \"payments.refund for the same order and refund request: the agent's blind retry.\", \"dispatch\": \"dispatched\", \"effect\": \"confirmed\", \"evidence\": [\"r4-explore-cli-run\"]}], \"assumptions\": [\"The payments double's ledger records every refund it applied.\", \"The cited run records are public excerpts with internal paths, command lines, runner names and commit ids removed. The runs were made on a cloud runner with a working tree recorded as dirty; the sample's files are assumed identical to revision 4e36eea, which was not checked against the runner's tree.\"], \"evidence\": [\"r4-explore-cli-run\", \"r4-agent-live-run\"], \"exclusions\": [\"The template rule for the payments-eu account is not part of this example.\"], \"fidelity\": \"simulated\", \"method\": \"explore-default\", \"outcome\": \"violation_found\", \"replay\": \"exact_within_envelope\", \"rule\": \"refund-at-most-once\", \"rule_digest\": \"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\", \"statement\": \"A lost reply followed by the agent's blind retry refunded the same refund request twice.\", \"unknowns\": [\"The trial record and the finding behind this example are not in the repository; only the run records are cited.\"], \"witnesses\": []}, {\"actions\": [], \"assumptions\": [], \"evidence\": [], \"exclusions\": [], \"fidelity\": \"simulated\", \"method\": \"explore-default\", \"outcome\": \"unknown_or_incomplete\", \"replay\": \"not_attempted\", \"rule\": \"mail-to-customers-only\", \"rule_digest\": \"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\", \"statement\": \"This example cites no trial that sent an email, so the rule's result is unknown.\", \"unknowns\": [\"No cited evidence shows whether any trial called mail.send.\"], \"witnesses\": []}, {\"actions\": [], \"assumptions\": [], \"evidence\": [], \"exclusions\": [], \"fidelity\": \"simulated\", \"method\": \"explore-default\", \"outcome\": \"not_exercised\", \"replay\": \"not_attempted\", \"rule\": \"large-refunds-need-approval\", \"rule_digest\": \"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\", \"statement\": \"No trial refunded more than 50.00 USD, so the rule's condition was never reached.\", \"unknowns\": [], \"witnesses\": []}], \"issued_ms\": \"1792195200000\", \"issuer\": {\"generator\": \"written by hand for the C1 contract; not generated by Geometer\", \"id\": \"geometer-examples\", \"keys\": [], \"name\": \"Geometer contract examples (an example, not an issued assessment)\"}, \"methods\": [{\"budget\": {\"depth\": 8, \"permits\": \"216\", \"trials\": \"24\"}, \"conditions\": [\"Tools are Geometer-controlled doubles (simulated fidelity).\", \"The model is a scripted stand-in.\", \"Faults offered: a lost reply on a tool call.\"], \"id\": \"explore-default\", \"inputs\": {\".geometer/tasks.toml\": \"sha256:403c33f5a6b5e9e3fd38b17c69922b78e3043f8fcc10155a34ff9741821eedfb\"}, \"kind\": \"bounded_exploration\", \"sampling\": \"Exhaustive within the depth bound, then up to 4 seeded random walks if unfinished (Explore's defaults).\", \"seeds\": [\"0\"], \"strategy\": \"exhaustive\", \"termination\": [\"Not recorded in this example; see the cited run record.\"], \"unexercised_paths\": [\"Refunds above 50.00 USD (both declared tasks refund 10.00).\", \"The payments-eu account.\"], \"unexercised_rules\": [\"large-refunds-need-approval\"], \"verifier\": \"rules tool-effect evaluator\", \"version\": \"geometer 0.1.0\"}], \"notes\": [\"This is an example of the assessment format, written by hand from the refund-agent sample's real rules and tool contracts.\", \"It is not an issued assessment, it is unsigned, and its findings paraphrase the cited run records.\", \"The cited run records are public excerpts with internal paths, command lines, runner names and commit ids removed. The runs were made on a cloud runner with a working tree recorded as dirty; the sample's files are assumed identical to revision 4e36eea, which was not checked against the runner's tree.\"], \"rules\": [{\"bindings\": [{\"adapters\": [\"tool-gateway.payments\", \"tool-ledger.payments\"], \"coordination\": \"none (evaluated after the trial)\", \"failure\": \"unknown\", \"mode\": \"explore\", \"projection\": \"observer snapshots at baseline and final; gateway statement history\", \"rule\": \"refund-at-most-once\", \"rule_digest\": \"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\", \"support\": {\"kind\": \"supported\"}}, {\"adapters\": [], \"coordination\": \"\", \"failure\": \"deny\", \"mode\": \"guard\", \"projection\": \"\", \"rule\": \"refund-at-most-once\", \"rule_digest\": \"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\", \"support\": {\"kind\": \"unsupported\", \"reason\": \"the Guard cannot decide this family from one call: needs an atomic reservation keyed by a ToolContract intent key, plus provider idempotency or reconciliation across commit/ack gaps\"}}, {\"adapters\": [], \"coordination\": \"\", \"failure\": \"record_only\", \"mode\": \"prove\", \"projection\": \"\", \"rule\": \"refund-at-most-once\", \"rule_digest\": \"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\", \"support\": {\"kind\": \"unsupported\", \"reason\": \"the evidence ledger records calls, Guard decisions and receipts, but nothing evaluates this rule against ledger entries yet; Explore trial records are not a Prove record\"}}], \"exceptions\": [], \"owner\": \"refund-agent sample maintainers (example)\", \"preconditions\": [\"Applies to payments.refund calls; the identity is the tool contract's intent key (order_id, refund_request).\"], \"required\": true, \"reviews\": [], \"rule\": {\"digest\": \"sha256:3c3ed70ae31d7af659f26748a8b0220617b791ee1532c7c6f707a9c6f81eb461\", \"id\": \"refund-at-most-once\", \"intent\": \"approved_rule\", \"meaning\": {\"body\": {\"kind\": \"at_most_once_effect\", \"operation\": \"refund\", \"tool\": \"payments\"}, \"evidence\": [\"statement_history\", \"effect_receipts\"], \"units\": {}, \"unless\": []}, \"provenance\": \"declared in .geometer/rules.toml\"}, \"statement\": \"Each refund request (one order and one refund request id) is refunded at most once.\", \"version\": \"1\"}, {\"bindings\": [{\"adapters\": [\"tool-gateway.mail\", \"tool-ledger.mail\"], \"coordination\": \"none (evaluated after the trial)\", \"failure\": \"unknown\", \"mode\": \"explore\", \"projection\": \"observer snapshots at baseline and final; gateway statement history\", \"rule\": \"mail-to-customers-only\", \"rule_digest\": \"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\", \"support\": {\"kind\": \"supported\"}}, {\"adapters\": [\"tool-gateway.mail\", \"tool-ledger.mail\"], \"coordination\": \"sandbox prototype: the tool's HTTP gateway decides each call before dispatch; not production enforcement\", \"failure\": \"deny\", \"mode\": \"guard\", \"projection\": \"\", \"rule\": \"mail-to-customers-only\", \"rule_digest\": \"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\", \"support\": {\"kind\": \"supported\"}}, {\"adapters\": [], \"coordination\": \"\", \"failure\": \"record_only\", \"mode\": \"prove\", \"projection\": \"\", \"rule\": \"mail-to-customers-only\", \"rule_digest\": \"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\", \"support\": {\"kind\": \"unsupported\", \"reason\": \"the evidence ledger records calls, Guard decisions and receipts, but nothing evaluates this rule against ledger entries yet; Explore trial records are not a Prove record\"}}], \"exceptions\": [], \"owner\": \"refund-agent sample maintainers (example)\", \"preconditions\": [\"Applies to mail.send calls; checks the to field.\"], \"required\": true, \"reviews\": [], \"rule\": {\"digest\": \"sha256:8e5c368af20d10567821d660837889ac90fd8a7a0b2ea5378cea50bbec78b859\", \"id\": \"mail-to-customers-only\", \"intent\": \"approved_rule\", \"meaning\": {\"body\": {\"allowed_suffixes\": [\"@customer.example\"], \"field\": \"to\", \"kind\": \"argument_allowlist\", \"operation\": \"send\", \"tool\": \"mail\"}, \"evidence\": [\"statement_history\", \"effect_receipts\"], \"units\": {}, \"unless\": []}, \"provenance\": \"declared in .geometer/rules.toml\"}, \"statement\": \"The agent only emails addresses ending in @customer.example.\", \"version\": \"1\"}, {\"bindings\": [{\"adapters\": [\"tool-gateway.payments\", \"tool-ledger.payments\"], \"coordination\": \"none (evaluated after the trial)\", \"failure\": \"unknown\", \"mode\": \"explore\", \"projection\": \"observer snapshots at baseline and final; gateway statement history\", \"rule\": \"large-refunds-need-approval\", \"rule_digest\": \"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\", \"support\": {\"kind\": \"supported\"}}, {\"adapters\": [\"tool-gateway.payments\", \"tool-ledger.payments\"], \"coordination\": \"sandbox prototype: the tool's HTTP gateway decides each call before dispatch; not production enforcement\", \"failure\": \"deny\", \"mode\": \"guard\", \"projection\": \"\", \"rule\": \"large-refunds-need-approval\", \"rule_digest\": \"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\", \"support\": {\"kind\": \"supported\"}}, {\"adapters\": [], \"coordination\": \"\", \"failure\": \"record_only\", \"mode\": \"prove\", \"projection\": \"\", \"rule\": \"large-refunds-need-approval\", \"rule_digest\": \"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\", \"support\": {\"kind\": \"unsupported\", \"reason\": \"the evidence ledger records calls, Guard decisions and receipts, but nothing evaluates this rule against ledger entries yet; Explore trial records are not a Prove record\"}}], \"exceptions\": [], \"owner\": \"refund-agent sample maintainers (example)\", \"preconditions\": [\"Applies to payments.refund calls whose amount is above 50.00 USD.\"], \"required\": true, \"reviews\": [], \"rule\": {\"digest\": \"sha256:31dde19911f6dab53d957e7c2c9392694ee25c87b01c7bfcfaf015d918ec4f56\", \"id\": \"large-refunds-need-approval\", \"intent\": \"approved_rule\", \"meaning\": {\"body\": {\"amount_field\": \"amount\", \"approval_field\": \"approval\", \"kind\": \"call_bound_approval\", \"operation\": \"refund\", \"threshold\": [\"dec\", \"50.00\"], \"tool\": \"payments\"}, \"evidence\": [\"statement_history\", \"effect_receipts\"], \"units\": {\"amount\": \"USD\"}, \"unless\": []}, \"provenance\": \"declared in .geometer/rules.toml\"}, \"statement\": \"A refund above 50.00 USD must carry an approval for that exact call.\", \"version\": \"1\"}], \"schema\": \"geo_assessment_v1\", \"subject\": {\"boundary\": {\"covered\": [\"payments (payments.example) through its gateway and ledger\", \"mail (mail.example) through its gateway and ledger\", \"the model endpoint model.example (answered by the stand-in)\"], \"outside\": [\"the real payment provider (the payments tool is a double)\", \"the payments-eu account (no task uses it)\", \"anything the agents do without calling a declared tool\"], \"statement\": \"Only tool calls that pass through Geometer's tool gateways are observed and assessed.\"}, \"config\": {\".geometer/rules.toml\": \"sha256:21dc53d89680b5945dac162dcbc7e4f889fba35df2753b3a6c96f622ca87c147\", \".geometer/tasks.toml\": \"sha256:403c33f5a6b5e9e3fd38b17c69922b78e3043f8fcc10155a34ff9741821eedfb\", \".geometer/tools.toml\": \"sha256:701dd4d556c7475f703f44effdacefc5003c04b977f48add717d54b517d28451\", \"compose.yaml\": \"sha256:6378c8d174514973dac3c991ef9272c8c1eb0875474d129af768e3f3d3b99077\"}, \"dependencies\": {\"ts/package-lock.json\": \"sha256:0ed31137cc9fcecb35a6722f3c982e18358d19a837457df6dfa628411786139d\"}, \"models\": [{\"note\": \"The agents ask for gpt-4o-mini at model.example; Geometer's scripted stand-in answers. No hosted model was called.\", \"pin\": {\"binding\": \"model\", \"model\": \"scripted:script\"}, \"precision\": \"stand_in\"}], \"name\": \"Refund agent sample\", \"revision\": {\"digest\": \"sha256:f00404279b97e3b4bef3eaeb3ab03c6c280591288db31a89a5c7c49a8cf17491\", \"inputs\": [\".geometer/rules.toml\", \".geometer/tasks.toml\", \".geometer/tools.toml\", \"compose.yaml\", \"py/Dockerfile\", \"py/agent.py\", \"ts/Dockerfile\", \"ts/agent.mjs\", \"ts/package-lock.json\", \"ts/package.json\"], \"vcs\": {\"dirty\": false, \"revision\": \"4e36eea16e365f23e6c5350a747b167c10a46494\", \"system\": \"git\"}}}, \"summary\": {\"incomplete_required\": [\"mail-to-customers-only\", \"large-refunds-need-approval\"], \"missing_evidence\": [], \"no_violation_observed\": [], \"not_exercised\": [\"large-refunds-need-approval\"], \"outcome\": \"violation_found\", \"proved\": [], \"unknown_or_incomplete\": [\"mail-to-customers-only\"], \"violation_found\": [\"refund-at-most-once\"]}, \"verification\": {\"policy\": \"geo-assessment-policy/unsigned-example\", \"required_suites\": [], \"status\": []}}, \"signatures\": []}, \"statement\": {\"v\": 1, \"assessment\": \"assessment:4040e8b44aba471e5c02d122d4786fe5e116a9629287e6431bfe26a2ac4ca887\", \"as_of_ms\": \"1792195300000\", \"events\": \"1\", \"head\": \"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\", \"signatures\": [{\"suite\": \"geo-ed25519/1\", \"algorithm\": \"ed25519\", \"key\": \"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\", \"signature\": \"AAECAw==\"}]}, \"renewals\": [], \"key_hints\": [{\"key\": \"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\", \"suite\": \"geo-ed25519/1\", \"algorithm\": \"ed25519\", \"public_key\": \"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=\", \"label\": \"the issuer's key, from its own file\"}], \"key_log\": [], \"exported_ms\": \"1792195500000\", \"notes\": [\"An example bundle for the codec vectors; not an export of a real assessment.\"]}"
+    },
+    {
+      "id": "unknown-outcome",
+      "type": "SystemAssessment",
+      "base": "valid-mixed.json",
+      "error": "unknown_variant",
+      "ops": [
+        [
+          "set",
+          "/manifest/findings/0/outcome",
+          "passed"
+        ]
+      ]
+    },
+    {
+      "id": "unknown-field",
+      "type": "SystemAssessment",
+      "base": "valid-mixed.json",
+      "error": "unknown_field",
+      "ops": [
+        [
+          "set",
+          "/manifest/badge",
+          "green"
+        ]
+      ]
+    },
+    {
+      "id": "missing-subject",
+      "type": "SystemAssessment",
+      "base": "valid-mixed.json",
+      "error": "missing_field",
+      "ops": [
+        [
+          "remove",
+          "/manifest/subject"
+        ]
+      ]
+    },
+    {
+      "id": "missing-signature-list",
+      "type": "SystemAssessment",
+      "base": "valid-unsigned.json",
+      "error": "missing_field",
+      "ops": [
+        [
+          "remove",
+          "/signatures"
+        ]
+      ]
+    },
+    {
+      "id": "number-typed-digest",
+      "type": "SystemAssessment",
+      "base": "valid-mixed.json",
+      "error": "type",
+      "ops": [
+        [
+          "set",
+          "/manifest/rules/0/rule/digest",
+          12345
+        ]
+      ]
+    },
+    {
+      "id": "number-typed-time",
+      "type": "SystemAssessment",
+      "base": "valid-mixed.json",
+      "error": "type",
+      "ops": [
+        [
+          "set",
+          "/manifest/issued_ms",
+          1790100000000
+        ]
+      ]
+    },
+    {
+      "id": "number-typed-seed",
+      "type": "SystemAssessment",
+      "base": "valid-mixed.json",
+      "error": "type",
+      "ops": [
+        [
+          "set",
+          "/manifest/methods/0/seeds",
+          [
+            0
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "bad-evidence-digest",
+      "type": "SystemAssessment",
+      "base": "valid-mixed.json",
+      "error": "invalid_digest",
+      "ops": [
+        [
+          "set",
+          "/manifest/evidence/0/digest",
+          "sha256:ABC"
+        ]
+      ]
+    },
+    {
+      "id": "invalid-assessment-id",
+      "type": "SystemAssessment",
+      "base": "valid-mixed.json",
+      "error": "invalid_id",
+      "ops": [
+        [
+          "set",
+          "/id",
+          "assessment with spaces"
+        ]
+      ]
+    },
+    {
+      "id": "unknown-method-kind",
+      "type": "SystemAssessment",
+      "base": "valid-mixed.json",
+      "error": "unknown_variant",
+      "ops": [
+        [
+          "set",
+          "/manifest/methods/0/kind",
+          "exhaustive_proof"
+        ]
+      ]
+    },
+    {
+      "id": "future-schema-at-codec-level",
+      "type": "SystemAssessment",
+      "base": "valid-mixed.json",
+      "error": "unknown_variant",
+      "ops": [
+        [
+          "set",
+          "/manifest/schema",
+          "geo_assessment_v2"
+        ]
+      ]
+    },
+    {
+      "id": "signature-bytes-not-base64",
+      "type": "SystemAssessment",
+      "base": "valid-mixed.json",
+      "error": "non_canonical",
+      "ops": [
+        [
+          "set",
+          "/signatures/0/signature",
+          "not base64!"
+        ]
+      ]
+    }
+  ],
+  "schema": [
+    {
+      "id": "future-schema-same-fields",
+      "base": "valid-unsigned.json",
+      "refusal": "unsupported_schema_version",
+      "ops": [
+        [
+          "set",
+          "/manifest/schema",
+          "geo_assessment_v2"
+        ]
+      ]
+    },
+    {
+      "id": "future-schema-with-new-fields",
+      "base": "valid-unsigned.json",
+      "refusal": "unsupported_schema_version",
+      "ops": [
+        [
+          "set",
+          "/manifest/schema",
+          "geo_assessment_v2"
+        ],
+        [
+          "set",
+          "/manifest/attestations",
+          []
+        ]
+      ]
+    },
+    {
+      "id": "id-mismatch",
+      "base": "valid-unsigned.json",
+      "refusal": "id_mismatch",
+      "ops": [
+        [
+          "set",
+          "/manifest/notes",
+          [
+            "edited after issuance"
+          ]
+        ]
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "id": "id-mismatch",
+      "base": "valid-mixed.json",
+      "reid": false,
+      "codes": [
+        "id_mismatch"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/notes",
+          [
+            "edited after issuance"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "bounded-testing-claims-proof",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "proof_without_formal_model"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/findings/1/outcome",
+          "proved_for_declared_model"
+        ],
+        [
+          "set",
+          "/manifest/summary/no_violation_observed",
+          []
+        ],
+        [
+          "set",
+          "/manifest/summary/proved",
+          [
+            "account-number-unique"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "bounded-only-proof-summary",
+      "base": "valid-unsigned.json",
+      "reid": true,
+      "codes": [
+        "proof_without_formal_model",
+        "proof_without_formal_model"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/findings/0/outcome",
+          "proved_for_declared_model"
+        ],
+        [
+          "set",
+          "/manifest/findings/1/outcome",
+          "proved_for_declared_model"
+        ],
+        [
+          "set",
+          "/manifest/summary/outcome",
+          "proved_for_declared_model"
+        ],
+        [
+          "set",
+          "/manifest/summary/no_violation_observed",
+          []
+        ],
+        [
+          "set",
+          "/manifest/summary/proved",
+          [
+            "balance-non-negative",
+            "account-number-unique"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "bounded-claim-as-formal-result",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "claim_overstates_method"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/claim/kind",
+          "formal_model_result"
+        ]
+      ]
+    },
+    {
+      "id": "formal-method-without-declared-model",
+      "base": "valid-formal-model.json",
+      "reid": true,
+      "codes": [
+        "model_declaration_inconsistent",
+        "proof_without_formal_model",
+        "claim_overstates_method"
+      ],
+      "ops": [
+        [
+          "remove",
+          "/manifest/methods/0/model"
+        ]
+      ]
+    },
+    {
+      "id": "summary-better-than-required-rules",
+      "base": "valid-incomplete.json",
+      "reid": true,
+      "codes": [
+        "summary_mismatch"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/summary/outcome",
+          "no_violation_observed_within_scope"
+        ]
+      ]
+    },
+    {
+      "id": "summary-drops-incomplete-list",
+      "base": "valid-incomplete.json",
+      "reid": true,
+      "codes": [
+        "summary_mismatch"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/summary/incomplete_required",
+          []
+        ]
+      ]
+    },
+    {
+      "id": "summary-hides-violation",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "summary_mismatch"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/summary/outcome",
+          "no_violation_observed_within_scope"
+        ]
+      ]
+    },
+    {
+      "id": "deleted-required-evidence-ignored",
+      "base": "valid-unsigned.json",
+      "reid": true,
+      "codes": [
+        "summary_mismatch"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/evidence/0/payload",
+          "deleted"
+        ]
+      ]
+    },
+    {
+      "id": "rule-meaning-changed-without-digest",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "rule_digest_mismatch"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/rules/0/rule/meaning/body/min",
+          [
+            "int",
+            "-100"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "finding-pins-other-rule-digest",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "finding_rule_digest_mismatch"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/findings/0/rule_digest",
+          "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        ]
+      ]
+    },
+    {
+      "id": "binding-pins-other-rule",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "binding_for_other_rule"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/rules/0/bindings/0/rule_digest",
+          "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        ]
+      ]
+    },
+    {
+      "id": "rule-without-finding",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "rule_without_finding"
+      ],
+      "ops": [
+        [
+          "remove",
+          "/manifest/findings/2"
+        ]
+      ]
+    },
+    {
+      "id": "finding-for-undeclared-rule",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "unknown_rule",
+        "rule_without_finding"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/findings/2/rule",
+          "no-such-rule"
+        ]
+      ]
+    },
+    {
+      "id": "unknown-evidence-reference",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "unknown_evidence"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/findings/0/evidence",
+          [
+            "no-such-evidence"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "unknown-method-reference",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "unknown_method"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/findings/1/method",
+          "no-such-method"
+        ]
+      ]
+    },
+    {
+      "id": "unexercised-rule-overclaims",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "unexercised_rule_overclaims"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/methods/0/unexercised_rules",
+          [
+            "owner-present",
+            "account-number-unique"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "unsupported-binding-overclaims",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "unsupported_binding_overclaims"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/rules/1/bindings/0/support",
+          {
+            "kind": "unsupported",
+            "reason": "no adapter supplies final_state"
+          }
+        ]
+      ]
+    },
+    {
+      "id": "held-request-with-confirmed-effect",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "action_states_inconsistent"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/findings/0/actions/0/dispatch",
+          "not_dispatched"
+        ]
+      ]
+    },
+    {
+      "id": "dispatched-but-not-executed",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "action_states_inconsistent"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/findings/0/actions/1/effect",
+          "not_executed"
+        ]
+      ]
+    },
+    {
+      "id": "subject-without-identity",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "subject_without_identity"
+      ],
+      "ops": [
+        [
+          "remove",
+          "/manifest/subject/revision"
+        ]
+      ]
+    },
+    {
+      "id": "bounded-method-without-budget",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "bounded_method_without_budget"
+      ],
+      "ops": [
+        [
+          "remove",
+          "/manifest/methods/0/budget"
+        ]
+      ]
+    },
+    {
+      "id": "derivative-without-original",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "derivation_inconsistent"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/artifact",
+          "redacted_derivative"
+        ]
+      ]
+    },
+    {
+      "id": "assessed-after-issuance",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "times_out_of_order"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/assessed_to_ms",
+          "1790100000001"
+        ]
+      ]
+    },
+    {
+      "id": "duplicate-rule",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "duplicate_rule",
+        "summary_mismatch"
+      ],
+      "ops": [
+        [
+          "append",
+          "/manifest/rules",
+          {
+            "bindings": [
+              {
+                "adapters": [
+                  "store-observer.ledger-db"
+                ],
+                "coordination": "none (evaluated after the trial)",
+                "failure": "unknown",
+                "mode": "explore",
+                "projection": "observer snapshots at baseline and final; gateway statement history",
+                "rule": "balance-non-negative",
+                "rule_digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+                "support": {
+                  "kind": "supported"
+                }
+              },
+              {
+                "adapters": [],
+                "coordination": "",
+                "failure": "deny",
+                "mode": "guard",
+                "projection": "",
+                "rule": "balance-non-negative",
+                "rule_digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+                "support": {
+                  "kind": "unsupported",
+                  "reason": "a pre-effect bound needs the projected post-state with every writer coordinated through a reservation or conditional update"
+                }
+              }
+            ],
+            "exceptions": [],
+            "owner": "ledger team (synthetic)",
+            "preconditions": [],
+            "required": true,
+            "reviews": [
+              {
+                "accepted": true,
+                "note": "synthetic review record",
+                "reviewer": "reviewer-1",
+                "rule_digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+                "scope": "synthetic"
+              }
+            ],
+            "rule": {
+              "digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+              "id": "balance-non-negative",
+              "intent": "approved_rule",
+              "meaning": {
+                "body": {
+                  "column": "balance",
+                  "kind": "numeric_bound",
+                  "min": [
+                    "int",
+                    "0"
+                  ],
+                  "ns": "ledger-db.accounts"
+                },
+                "evidence": [
+                  "final_state",
+                  "statement_history",
+                  "transaction_outcomes"
+                ],
+                "units": {
+                  "balance": "EUR cents"
+                },
+                "unless": []
+              },
+              "provenance": "synthetic test vector"
+            },
+            "statement": "An account balance never goes below zero.",
+            "version": "1"
+          }
+        ]
+      ]
+    },
+    {
+      "id": "duplicate-method",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "duplicate_method"
+      ],
+      "ops": [
+        [
+          "append",
+          "/manifest/methods",
+          {
+            "budget": {
+              "depth": 8,
+              "permits": "216",
+              "trials": "24"
+            },
+            "conditions": [
+              "synthetic"
+            ],
+            "id": "explore-1",
+            "inputs": {
+              "workload.toml": "sha256:4a0da2efe32572d4d32e4c489362f8477a6488b52693e6d09fedb28f9ff62f07"
+            },
+            "kind": "bounded_exploration",
+            "reach": {
+              "complete": "20",
+              "decisions": "61",
+              "depth_cut": "4",
+              "exhausted": "trial budget",
+              "finished": false,
+              "invalid": "0",
+              "notes": [],
+              "permits": "190",
+              "pruned": "0",
+              "sleep_blocked": "0",
+              "trials": "24",
+              "unexplored": "7"
+            },
+            "sampling": "none: exhaustive within the depth bound",
+            "seeds": [
+              "0"
+            ],
+            "strategy": "exhaustive",
+            "termination": [
+              "trial budget exhausted with 7 alternatives unexplored"
+            ],
+            "unexercised_paths": [
+              "concurrent transfers between more than two accounts"
+            ],
+            "unexercised_rules": [
+              "owner-present"
+            ],
+            "verifier": "rules state evaluator (synthetic)",
+            "version": "geometer 0.1.0 (synthetic)"
+          }
+        ]
+      ]
+    },
+    {
+      "id": "duplicate-evidence",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "duplicate_evidence"
+      ],
+      "ops": [
+        [
+          "append",
+          "/manifest/evidence",
+          {
+            "digest": "sha256:3e4d9405731bf15ef6935225eb94214e902d21b5a81ab415f23fcd5a304adabd",
+            "id": "trial-7",
+            "location": "store/objects/trial-7",
+            "note": "synthetic",
+            "payload": "present",
+            "privacy": "public",
+            "redactions": [],
+            "required": true,
+            "role": "trial_record",
+            "size": "100"
+          }
+        ]
+      ]
+    },
+    {
+      "id": "duplicate-finding",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "duplicate_finding"
+      ],
+      "ops": [
+        [
+          "append",
+          "/manifest/findings",
+          {
+            "actions": [],
+            "assumptions": [],
+            "evidence": [
+              "trial-7"
+            ],
+            "exclusions": [],
+            "fidelity": "simulated",
+            "method": "explore-1",
+            "outcome": "no_violation_observed_within_scope",
+            "replay": "not_attempted",
+            "rule": "account-number-unique",
+            "rule_digest": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760",
+            "statement": "No duplicate account number in 20 complete trials.",
+            "unknowns": [],
+            "witnesses": []
+          }
+        ]
+      ]
+    },
+    {
+      "id": "original-names-an-original",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "derivation_inconsistent"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/derived_from",
+          "assessment:c05b39c823d7ec7c686a0fef2122ba2f311f32df0e2ff4d0aaf4b900ab0abee7"
+        ]
+      ]
+    },
+    {
+      "id": "bounded-method-declares-a-model",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "model_declaration_inconsistent"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/methods/0/model",
+          {
+            "name": "ledger-withdrawal-model",
+            "digest": "sha256:0c33bef404ca27fdb53f662f23aa851136a957eda430d5100ccdbf439d1b81cf",
+            "checker": "synthetic checker 0",
+            "assumptions": [
+              "withdrawals are serialized by the database",
+              "two accounts, three withdrawals"
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "unsupported-binding-overclaims-runtime",
+      "base": "valid-unsigned.json",
+      "reid": true,
+      "codes": [
+        "unsupported_binding_overclaims"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/findings/2/outcome",
+          "no_violation_observed_within_scope"
+        ],
+        [
+          "set",
+          "/manifest/summary/unknown_or_incomplete",
+          []
+        ],
+        [
+          "set",
+          "/manifest/summary/no_violation_observed",
+          [
+            "balance-non-negative",
+            "account-number-unique",
+            "owner-present"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "claim-cites-undeclared-evidence",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "unknown_evidence"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/claim/dependencies",
+          [
+            "nothing-here"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "method-lists-undeclared-rule",
+      "base": "valid-mixed.json",
+      "reid": true,
+      "codes": [
+        "unknown_rule"
+      ],
+      "ops": [
+        [
+          "set",
+          "/manifest/methods/0/unexercised_rules",
+          [
+            "owner-present",
+            "no-such-rule"
+          ]
+        ]
+      ]
+    }
+  ],
+  "bindings": [
+    {
+      "id": "all-bindings-match",
+      "base": "valid-mixed.json",
+      "mismatches": [],
+      "expected": {
+        "revision": "sha256:09c36fd1bd15da8b61e43d14031b589d0c667119a3aa023a3d8edde581d1b19f",
+        "environment": "sha256:01d64f3716b528ff5dc044bd616758f8ea92d96fcdbde2120185afccc6a73e71",
+        "config": {
+          "service.toml": "sha256:e27695f16880a7e11e2ca0d0e0a2e8a644eb839539e231fba248c302ea472933"
+        },
+        "dependencies": {
+          "postgres": "sha256:f0e4772840577e645a7f6721e0199ae45ba4da14141e7da6dc2f240b5601e107"
+        },
+        "rules": {
+          "balance-non-negative": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+          "account-number-unique": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760",
+          "owner-present": "sha256:65818e1321c18b98d31424d15bb49b5b630eb06c6074fb779127dc301415b0b1"
+        },
+        "evidence": {
+          "trial-7": "sha256:3e4d9405731bf15ef6935225eb94214e902d21b5a81ab415f23fcd5a304adabd",
+          "replay-7": "sha256:37506a990da9b35c32242feac4560d366395d138be0abc655e3ca92308c4b96b",
+          "service-log": "sha256:259bc6a6d41b4d308fcfc3b54901f9356cbf657c76b3d16965152ec960b54f89"
+        }
+      }
+    },
+    {
+      "id": "wrong-subject-revision",
+      "base": "valid-mixed.json",
+      "mismatches": [
+        [
+          "revision",
+          ""
+        ]
+      ],
+      "expected": {
+        "revision": "sha256:b9accf61bab3ad6e305ea4d68c673eea08130c0d0f01c77e355dd5dde455d8c5"
+      }
+    },
+    {
+      "id": "build-expected-but-absent",
+      "base": "valid-mixed.json",
+      "mismatches": [
+        [
+          "build",
+          ""
+        ]
+      ],
+      "expected": {
+        "build": "sha256:a5df3fde7b200c3fa2791144c7e05c5c2bced4c6ad863d3a4cf76c972c1712f9"
+      }
+    },
+    {
+      "id": "wrong-config",
+      "base": "valid-mixed.json",
+      "mismatches": [
+        [
+          "config",
+          "service.toml"
+        ]
+      ],
+      "expected": {
+        "config": {
+          "service.toml": "sha256:db0c274086ca443cc52afdcf137cccb2b7ce40b21ccf816432d2cc4b3972cc9d"
+        }
+      }
+    },
+    {
+      "id": "wrong-environment",
+      "base": "valid-mixed.json",
+      "mismatches": [
+        [
+          "environment",
+          ""
+        ]
+      ],
+      "expected": {
+        "environment": "sha256:275a1bb598a5c928e892410867b9d99a36844292c69227fdccd733978f2acdcf"
+      }
+    },
+    {
+      "id": "wrong-rule-digest",
+      "base": "valid-mixed.json",
+      "mismatches": [
+        [
+          "rule",
+          "balance-non-negative"
+        ]
+      ],
+      "expected": {
+        "rules": {
+          "balance-non-negative": "sha256:d8305e28173e20b2e3b93747f9d7c228d46d37b58bad76dfbab445ca7467881f",
+          "account-number-unique": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760",
+          "owner-present": "sha256:65818e1321c18b98d31424d15bb49b5b630eb06c6074fb779127dc301415b0b1"
+        }
+      }
+    },
+    {
+      "id": "rule-missing-from-assessment",
+      "base": "valid-mixed.json",
+      "mismatches": [
+        [
+          "rule",
+          "overdraft-fee-cap"
+        ]
+      ],
+      "expected": {
+        "rules": {
+          "balance-non-negative": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+          "account-number-unique": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760",
+          "owner-present": "sha256:65818e1321c18b98d31424d15bb49b5b630eb06c6074fb779127dc301415b0b1",
+          "overdraft-fee-cap": "sha256:9efbca5b18167d95a3008239c444b6ca88b0398beb8114844b6410cd56b7fa18"
+        }
+      }
+    },
+    {
+      "id": "rule-not-in-expected-set",
+      "base": "valid-mixed.json",
+      "mismatches": [
+        [
+          "rule",
+          "owner-present"
+        ]
+      ],
+      "expected": {
+        "rules": {
+          "balance-non-negative": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+          "account-number-unique": "sha256:a047195e0326d1a220b52484dc13a37f48fc7c12bc1db35729faa899ee6a7760"
+        }
+      }
+    },
+    {
+      "id": "wrong-evidence-digest",
+      "base": "valid-mixed.json",
+      "mismatches": [
+        [
+          "evidence",
+          "trial-7"
+        ]
+      ],
+      "expected": {
+        "evidence": {
+          "trial-7": "sha256:2af72ed6d2ed979e54236689efe7ae22353ed6193008b5508b3d5647c46e23ea",
+          "replay-7": "sha256:37506a990da9b35c32242feac4560d366395d138be0abc655e3ca92308c4b96b",
+          "service-log": "sha256:259bc6a6d41b4d308fcfc3b54901f9356cbf657c76b3d16965152ec960b54f89"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+[project]
+name = "geometer-contracts"
+version = "0.1.0"
+description = "Geometer contract codecs for Python (generated from contracts/schemas)"
+requires-python = ">=3.11"
+dependencies = []
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

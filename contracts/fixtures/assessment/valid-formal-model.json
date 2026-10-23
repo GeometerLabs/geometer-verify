@@ -1,0 +1,191 @@
+{
+  "id": "assessment:fc0c759a3057fbb83c4a6fc2b071950a8fe07238c8f56f42e594f2c8f8ff191c",
+  "manifest": {
+    "artifact": "example",
+    "assessed_from_ms": "1790000000000",
+    "assessed_to_ms": "1790000600000",
+    "claim": {
+      "conditions": [],
+      "dependencies": [
+        "model-source"
+      ],
+      "invalidation": [
+        "subject_changed",
+        "rule_changed",
+        "config_changed"
+      ],
+      "kind": "formal_model_result",
+      "review": "unreviewed",
+      "reviewers": [],
+      "statement": "For the declared model only, the balance never goes below zero."
+    },
+    "evidence": [
+      {
+        "digest": "sha256:ca2bb0de750ede54440e3d3993b625d5afee8c75665a78fc06dd8b971ec14914",
+        "id": "model-source",
+        "location": "store/objects/model-source",
+        "note": "synthetic",
+        "payload": "present",
+        "privacy": "public",
+        "redactions": [],
+        "required": true,
+        "role": "rule_source",
+        "size": "100"
+      }
+    ],
+    "findings": [
+      {
+        "actions": [],
+        "assumptions": [],
+        "evidence": [
+          "model-source"
+        ],
+        "exclusions": [],
+        "fidelity": "simulated",
+        "method": "model-check-1",
+        "outcome": "proved_for_declared_model",
+        "replay": "not_attempted",
+        "rule": "balance-non-negative",
+        "rule_digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+        "statement": "Holds in every state of the declared model (not of the running service).",
+        "unknowns": [],
+        "witnesses": []
+      }
+    ],
+    "issued_ms": "1790100000000",
+    "issuer": {
+      "generator": "contracts/fixtures/assessment generator",
+      "id": "vector-issuer",
+      "keys": [],
+      "name": "Synthetic contract test vector (not an issuer)"
+    },
+    "methods": [
+      {
+        "conditions": [
+          "synthetic: no checker was run"
+        ],
+        "id": "model-check-1",
+        "inputs": {},
+        "kind": "formal_model_check",
+        "model": {
+          "assumptions": [
+            "withdrawals are serialized by the database",
+            "two accounts, three withdrawals"
+          ],
+          "checker": "synthetic checker 0",
+          "digest": "sha256:0c33bef404ca27fdb53f662f23aa851136a957eda430d5100ccdbf439d1b81cf",
+          "name": "ledger-withdrawal-model"
+        },
+        "sampling": "none",
+        "seeds": [],
+        "termination": [
+          "state space of the declared model exhausted"
+        ],
+        "unexercised_paths": [],
+        "unexercised_rules": [],
+        "verifier": "synthetic checker 0",
+        "version": "synthetic"
+      }
+    ],
+    "notes": [
+      "Synthetic test vector: proved_for_declared_model is allowed here only because the method is a formal model check of a declared model."
+    ],
+    "rules": [
+      {
+        "bindings": [],
+        "exceptions": [],
+        "owner": "ledger team (synthetic)",
+        "preconditions": [],
+        "required": true,
+        "reviews": [
+          {
+            "accepted": true,
+            "note": "synthetic review record",
+            "reviewer": "reviewer-1",
+            "rule_digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+            "scope": "synthetic"
+          }
+        ],
+        "rule": {
+          "digest": "sha256:d84ce5a48b8d5f0861d8359b7f39536855fe4b07f6f4e8a512fcf1eb57c0eec5",
+          "id": "balance-non-negative",
+          "intent": "approved_rule",
+          "meaning": {
+            "body": {
+              "column": "balance",
+              "kind": "numeric_bound",
+              "min": [
+                "int",
+                "0"
+              ],
+              "ns": "ledger-db.accounts"
+            },
+            "evidence": [
+              "final_state",
+              "statement_history",
+              "transaction_outcomes"
+            ],
+            "units": {
+              "balance": "EUR cents"
+            },
+            "unless": []
+          },
+          "provenance": "synthetic test vector"
+        },
+        "statement": "An account balance never goes below zero.",
+        "version": "1"
+      }
+    ],
+    "schema": "geo_assessment_v1",
+    "subject": {
+      "boundary": {
+        "covered": [
+          "ledger-db writes through the observed connection"
+        ],
+        "outside": [
+          "other writers of ledger-db",
+          "the payment network"
+        ],
+        "statement": "Only the service's own database writes are observed."
+      },
+      "config": {
+        "service.toml": "sha256:e27695f16880a7e11e2ca0d0e0a2e8a644eb839539e231fba248c302ea472933"
+      },
+      "dependencies": {
+        "postgres": "sha256:f0e4772840577e645a7f6721e0199ae45ba4da14141e7da6dc2f240b5601e107"
+      },
+      "environment": "sha256:01d64f3716b528ff5dc044bd616758f8ea92d96fcdbde2120185afccc6a73e71",
+      "models": [],
+      "name": "Synthetic ledger service (contract test vector)",
+      "revision": {
+        "digest": "sha256:09c36fd1bd15da8b61e43d14031b589d0c667119a3aa023a3d8edde581d1b19f",
+        "inputs": [
+          "."
+        ],
+        "vcs": {
+          "dirty": false,
+          "revision": "0000000000000000000000000000000000000000",
+          "system": "git"
+        }
+      }
+    },
+    "summary": {
+      "incomplete_required": [],
+      "missing_evidence": [],
+      "no_violation_observed": [],
+      "not_exercised": [],
+      "outcome": "proved_for_declared_model",
+      "proved": [
+        "balance-non-negative"
+      ],
+      "unknown_or_incomplete": [],
+      "violation_found": []
+    },
+    "verification": {
+      "policy": "geo-assessment-policy/unsigned-local",
+      "required_suites": [],
+      "status": []
+    }
+  },
+  "signatures": []
+}

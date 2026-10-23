@@ -1,0 +1,10 @@
+{
+  "name": "@geometer/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Geometer contract codecs for TypeScript (generated from contracts/schemas)",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "test": "node --test test/" },
+  "engines": { "node": ">=24" }
+}

@@ -1,0 +1,29 @@
+[package]
+name = "geo-verify"
+description = "Standalone evidence verifier: checks an exported evidence pack against a trusted anchor with no host, database, runtime or network code"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+repository = "https://github.com/GeometerLabs/geometer-verify"
+
+[lib]
+name = "geo_verify"
+
+[[bin]]
+name = "geo-verify"
+path = "src/main.rs"
+
+# Deliberately small: the contract records (schema and canonical bytes), sha2,
+# ed25519 and ML-DSA-65 verification, hex and serde_json for the report. Nothing from the
+# host, a database, a runtime or a model provider. A test checks this with
+# `cargo tree`.
+[dependencies]
+geo-contracts = { path = "../geo-contracts" }
+sha2 = "0.10"
+hex = "0.4"
+ed25519-dalek = "2.2"
+serde_json = { version = "1", features = ["preserve_order"] }
+# ML-DSA-65 verification, FIPS 204 final, pure Rust (no C, so
+# the static Linux verifier still builds). Verification only: no randomness.
+ml-dsa = { version = "0.1.1", default-features = false }

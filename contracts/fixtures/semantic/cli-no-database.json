@@ -1,0 +1,182 @@
+{
+ "id": "cli-no-database",
+ "doc": "A command-line program with no network or database. The sum command exits 0 with the expected output; the version command was never run, so a rule about it is unexercised rather than passing.",
+ "graph": {
+  "id": "g-cli",
+  "actors": [
+   {
+    "id": "shell",
+    "entities": []
+   }
+  ],
+  "slots": [],
+  "nodes": [
+   {
+    "id": "n1",
+    "actor": "shell",
+    "stage": "action",
+    "op": {
+     "boundary": "process",
+     "name": "sum"
+    },
+    "inputs": {
+     "args": {
+      "kind": "literal",
+      "value": [
+       "list",
+       [
+        [
+         "str",
+         "1"
+        ],
+        [
+         "str",
+         "2"
+        ]
+       ]
+      ]
+     }
+    },
+    "outputs": {},
+    "after": []
+   }
+  ]
+ },
+ "observations": [
+  {
+   "id": "p1",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "1",
+   "phase": "dispatched",
+   "source": "process-exec",
+   "op": {
+    "boundary": "process",
+    "name": "sum"
+   },
+   "footprints": [],
+   "entities": [],
+   "values": {
+    "argv": [
+     "list",
+     [
+      [
+       "str",
+       "sum"
+      ],
+      [
+       "str",
+       "1"
+      ],
+      [
+       "str",
+       "2"
+      ]
+     ]
+    ]
+   },
+   "causes": [],
+   "observer": false,
+   "actor": "shell",
+   "action": "n1"
+  },
+  {
+   "id": "p2",
+   "context": {
+    "kind": "test_trial",
+    "trial": "t1",
+    "generation": "1"
+   },
+   "seq": "2",
+   "phase": "completed",
+   "source": "process-exec",
+   "op": {
+    "boundary": "process",
+    "name": "sum"
+   },
+   "footprints": [],
+   "entities": [],
+   "values": {
+    "exit_code": [
+     "int",
+     "0"
+    ],
+    "stdout": [
+     "str",
+     "3\n"
+    ]
+   },
+   "causes": [
+    {
+     "from": "p1",
+     "kind": "program_order",
+     "strength": "proven"
+    }
+   ],
+   "observer": false,
+   "actor": "shell",
+   "action": "n1"
+  }
+ ],
+ "expectations": [
+  {
+   "rule": {
+    "kind": "value_equals",
+    "boundary": "process",
+    "op": "sum",
+    "field": "exit_code",
+    "value": [
+     "int",
+     "0"
+    ]
+   },
+   "scope": null,
+   "verdict": "satisfied_on_observed_execution"
+  },
+  {
+   "rule": {
+    "kind": "value_equals",
+    "boundary": "process",
+    "op": "sum",
+    "field": "stdout",
+    "value": [
+     "str",
+     "3\n"
+    ]
+   },
+   "scope": null,
+   "verdict": "satisfied_on_observed_execution"
+  },
+  {
+   "rule": {
+    "kind": "value_equals",
+    "boundary": "process",
+    "op": "sum",
+    "field": "stdout",
+    "value": [
+     "str",
+     "4\n"
+    ]
+   },
+   "scope": null,
+   "verdict": "violated"
+  },
+  {
+   "rule": {
+    "kind": "value_equals",
+    "boundary": "process",
+    "op": "version",
+    "field": "exit_code",
+    "value": [
+     "int",
+     "0"
+    ]
+   },
+   "scope": null,
+   "verdict": "unexercised"
+  }
+ ]
+}

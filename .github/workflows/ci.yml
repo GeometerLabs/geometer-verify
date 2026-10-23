@@ -1,0 +1,96 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  rust:
+    name: rust (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned toolchain
+        run: |
+          channel=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$channel" --profile minimal --component rustfmt --component clippy
+          rustup default "$channel"
+          rustc --version
+      - name: Format
+        run: cargo fmt --all --check
+      - name: Build
+        run: cargo build --locked --all-targets
+      - name: Test
+        run: cargo test --locked
+      - name: Generated bindings are current
+        run: cargo run --locked -q -p contractgen -- --check
+
+  bindings:
+    name: typescript and python bindings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: TypeScript
+        working-directory: contracts/ts
+        run: npm test
+      - name: Python
+        working-directory: contracts/python
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m unittest discover -s tests -v
+
+  verifier-binary:
+    name: verifier release binary (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned toolchain
+        run: |
+          channel=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$channel" --profile minimal
+          rustup default "$channel"
+      - name: Build geo-verify (release)
+        run: cargo build --locked --release -p geo-verify
+      - name: Smoke test on the bundled fixtures
+        run: |
+          set -u
+          bin=target/release/geo-verify
+          fx=crates/geo-verify/tests/fixtures/profile
+          # Verified against the classical anchor: exit 0.
+          "$bin" "$fx/pack.json" --anchor "$fx/anchor-classical.json" > /dev/null
+          # No anchor: unverifiable, exit 3.
+          set +e
+          "$bin" "$fx/pack.json" > /dev/null
+          code=$?
+          set -e
+          test "$code" -eq 3
+      - name: Checksum
+        run: |
+          if command -v sha256sum >/dev/null; then sha256sum target/release/geo-verify; else shasum -a 256 target/release/geo-verify; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: geo-verify-${{ matrix.os }}
+          path: target/release/geo-verify
+          if-no-files-found: error

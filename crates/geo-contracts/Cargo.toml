@@ -1,0 +1,18 @@
+[package]
+name = "geo-contracts"
+description = "Canonical encoding, portable values, generated contract records, framing and protocol session guard"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+repository = "https://github.com/GeometerLabs/geometer-verify"
+
+# Core contract crate: no runtime, database client, framework or model
+# dependencies. Checked by a dependency-direction test in the closed product.
+[dependencies]
+base64 = "0.22"
+sha2 = "0.10"
+hex = "0.4"
+
+[dev-dependencies]
+serde_json = { version = "1", features = ["preserve_order"] }

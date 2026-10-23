@@ -1,0 +1,25 @@
+# Approved rules (reviewed business intent).
+
+[[rule]]
+id = "refund-at-most-once"
+family = "at_most_once_effect"
+tool = "payments"
+operation = "refund"
+
+[[rule]]
+id = "mail-to-customers-only"
+family = "argument_allowlist"
+tool = "mail"
+operation = "send"
+field = "to"
+allowed_suffixes = ["@customer.example"]
+
+[[rule]]
+id = "large-refunds-need-approval"
+family = "call_bound_approval"
+tool = "payments"
+operation = "refund"
+amount_field = "amount"
+threshold = "50.00"
+approval_field = "approval"
+units = { amount = "USD" }

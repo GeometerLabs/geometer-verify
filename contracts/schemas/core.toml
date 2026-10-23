@@ -1,0 +1,2660 @@
+# Geometer core contract: the single source for wire/artifact records.
+# `tools/contractgen` generates Rust, TypeScript and Python codecs from this
+# file; generated code is committed and CI fails if regeneration changes it.
+#
+# Encoding (docs/contracts.md):
+#   records   JSON objects, keys sorted by UTF-8 bytes, no whitespace;
+#             unknown fields are rejected; option<T> fields are omitted when absent
+#   unions    objects with a "kind" discriminator plus the variant's fields
+#   enums     strings
+#   u32       JSON integer; u64/i64 decimal strings (never JSON numbers)
+#   bytes     standard base64 with padding
+#   value     portable tagged value (see Value in docs/contracts.md)
+#   id        [A-Za-z0-9][A-Za-z0-9._:/@+-]{0,199}
+#   digest    "sha256:" + 64 lowercase hex
+#
+# Core records must not require any runtime, database, framework or model:
+# boundary vocabulary is generic and adapter names are opaque ids.
+
+[meta]
+protocol = "geo/2"
+
+# ---------------------------------------------------------------- enums
+
+[enum.Capability]
+doc = "Capability codes from capabilities.md §1 (D X E R O W S F T C P V)."
+values = ["discover", "execute", "environment", "reset", "observe", "workloads", "schedule", "faults", "time", "check", "reproduce", "verify_fix"]
+
+[enum.CapabilityStatus]
+doc = "Negotiated status of one capability for one scope."
+values = ["unsupported", "designed", "implemented", "negotiated", "degraded"]
+
+[enum.AttachmentMode]
+doc = "How observation/control is attached (capabilities.md §3)."
+values = ["external", "protocol_proxy", "runtime_attach", "test_build", "generated_harness", "manual_hooks"]
+
+[enum.AdapterRole]
+values = ["discovery", "execution", "runtime", "boundary", "environment", "generator", "model"]
+
+[enum.Boundary]
+doc = "Generic interaction boundary. Protocol/product specifics belong in OperationRef.name and adapter ids."
+values = ["process", "http", "grpc", "sql", "kv", "message", "file", "timer", "random", "library", "browser", "custom"]
+
+[enum.Phase]
+doc = "Observation lifecycle (architecture §4.3). A dispatched or completed statement is not a committed effect."
+values = ["initiated", "dispatched", "completed", "committed", "aborted", "cancelled", "unknown_outcome"]
+
+[enum.Access]
+values = ["read", "write", "read_write"]
+
+[enum.Stage]
+values = ["setup", "action", "assertion", "observation", "cleanup"]
+
+[enum.CausalKind]
+values = ["program_order", "spawn", "join", "message", "read_from", "transaction_member", "correlation"]
+
+[enum.EvidenceStrength]
+doc = "proven: adapter-established; inferred: derived with stated weaker evidence; correlated: shared ids/timestamps only, never happens-before."
+values = ["proven", "inferred", "correlated"]
+
+[enum.CommandStatus]
+values = ["accepted", "applied", "duplicate", "rejected_stale", "rejected_out_of_order", "rejected_invalid", "failed"]
+
+[enum.ExecutionState]
+values = ["completed", "blocked", "crashed", "cancelled", "budget_exhausted"]
+
+[enum.CheckVerdict]
+values = ["violated", "satisfied_on_observed_execution", "unknown", "unexercised", "not_applicable"]
+
+[enum.IntentLevel]
+values = ["declared_contract", "approved_rule", "candidate_rule", "observed_pattern"]
+
+[enum.ReproductionState]
+doc = "What a repetition showed. incompatible (R9): a pinned dependency (revision, environment, rule meaning, model version, adapter or tool contract) differs, so nothing is claimed about reproduction."
+values = ["exact_within_envelope", "property_reproduced", "workload_repeated", "diverged", "not_attempted", "incompatible"]
+
+[enum.CampaignState]
+values = ["draft", "resolved", "preparing", "running", "paused", "finalizing", "completed", "interrupted", "failed"]
+
+# -------------------------------------------------------------- records
+
+[record.VcsRef]
+fields = [
+  { name = "system", type = "string" },
+  { name = "revision", type = "string" },
+  { name = "dirty", type = "bool" },
+]
+
+[record.ProjectRevision]
+doc = "Content digest over relevant inputs including dirty/untracked files; VCS revision is provenance only."
+fields = [
+  { name = "digest", type = "digest" },
+  { name = "vcs", type = "option<VcsRef>" },
+  { name = "inputs", type = "list<string>" },
+]
+
+[record.CapabilityObservation]
+fields = [
+  { name = "capability", type = "Capability" },
+  { name = "status", type = "CapabilityStatus" },
+  { name = "scope", type = "string" },
+  { name = "attachment", type = "AttachmentMode" },
+  { name = "operations", type = "list<string>" },
+  { name = "limitations", type = "list<string>" },
+  { name = "witness", type = "option<string>" },
+]
+
+[record.AdapterManifest]
+fields = [
+  { name = "id", type = "id" },
+  { name = "version", type = "string" },
+  { name = "role", type = "AdapterRole" },
+  { name = "protocol_min", type = "u32" },
+  { name = "protocol_max", type = "u32" },
+  { name = "platforms", type = "list<string>" },
+  { name = "privileges", type = "list<string>" },
+  { name = "capabilities", type = "list<CapabilityObservation>" },
+]
+
+[record.EntityRef]
+doc = "Typed entity identity: composite keys and tenant scope, never a parsed string prefix."
+fields = [
+  { name = "ns", type = "string" },
+  { name = "kind", type = "string" },
+  { name = "key", type = "list<value>" },
+  { name = "tenant", type = "option<string>" },
+]
+
+[union.FootprintScope]
+doc = "Resource access scope. unknown conflicts with everything in its namespace."
+[union.FootprintScope.variants]
+exact = [{ name = "keys", type = "list<list<value>>" }]
+range = [{ name = "low", type = "option<list<value>>" }, { name = "high", type = "option<list<value>>" }]
+predicate = [{ name = "expr", type = "string" }]
+unknown = []
+
+[record.Footprint]
+fields = [
+  { name = "ns", type = "string" },
+  { name = "access", type = "Access" },
+  { name = "scope", type = "FootprintScope" },
+]
+
+[record.OperationRef]
+fields = [
+  { name = "boundary", type = "Boundary" },
+  { name = "name", type = "string" },
+]
+
+[record.CausalEdge]
+fields = [
+  { name = "from", type = "id" },
+  { name = "kind", type = "CausalKind" },
+  { name = "strength", type = "EvidenceStrength" },
+]
+
+[union.ExecutionContext]
+doc = "Where a fact or command belongs. A test trial is fenced by its reset generation (absent only on facts migrated from geo/1 without an envelope); a production session is fenced by its policy generation and is never reset."
+[union.ExecutionContext.variants]
+test_trial = [{ name = "campaign", type = "option<id>" }, { name = "trial", type = "id" }, { name = "generation", type = "option<u64>" }]
+production_session = [{ name = "tenant", type = "id" }, { name = "deployment", type = "id" }, { name = "session", type = "id" }, { name = "policy_generation", type = "u64" }]
+
+[enum.Authentication]
+doc = "How a principal was established. asserted = supplied by the workload itself (e.g. tool arguments) and never trusted for authority."
+values = ["gateway_verified", "wrapper_verified", "asserted"]
+
+[record.PrincipalContext]
+doc = "Authenticated identity behind an action: the workload (agent/service), the user it acts for, tenant, issuer and scopes. Distinct from the correlation actor id."
+fields = [
+  { name = "workload", type = "id" },
+  { name = "delegated_user", type = "option<id>" },
+  { name = "tenant", type = "option<id>" },
+  { name = "issuer", type = "option<string>" },
+  { name = "scopes", type = "list<string>" },
+  { name = "authentication", type = "Authentication" },
+]
+
+[record.Observation]
+doc = "One typed fact. observer=true marks observation-channel activity, excluded from actor histories."
+fields = [
+  { name = "id", type = "id" },
+  { name = "context", type = "ExecutionContext" },
+  { name = "seq", type = "u64" },
+  { name = "phase", type = "Phase" },
+  { name = "source", type = "id" },
+  { name = "actor", type = "option<id>" },
+  { name = "principal", type = "option<PrincipalContext>" },
+  { name = "action", type = "option<id>" },
+  { name = "intent", type = "option<id>" },
+  { name = "attempt", type = "option<id>" },
+  { name = "op", type = "OperationRef" },
+  { name = "footprints", type = "list<Footprint>" },
+  { name = "entities", type = "list<EntityRef>" },
+  { name = "values", type = "map<value>" },
+  { name = "txn", type = "option<id>" },
+  { name = "causes", type = "list<CausalEdge>" },
+  { name = "observer", type = "bool" },
+]
+
+[record.Actor]
+doc = "Who performs nodes. principal is a legacy label; authority is the authenticated principal the executor presents (absent: unauthenticated)."
+fields = [
+  { name = "id", type = "id" },
+  { name = "principal", type = "option<string>" },
+  { name = "entities", type = "list<EntityRef>" },
+  { name = "authority", type = "option<PrincipalContext>" },
+]
+
+[record.Slot]
+fields = [
+  { name = "id", type = "id" },
+  { name = "ty", type = "string" },
+]
+
+[union.Binding]
+[union.Binding.variants]
+literal = [{ name = "value", type = "value" }]
+slot = [{ name = "slot", type = "id" }]
+output = [{ name = "node", type = "id" }, { name = "path", type = "list<string>" }]
+generated = [{ name = "generator", type = "id" }, { name = "params", type = "map<value>" }]
+
+[enum.WorkloadSource]
+doc = "Where a workload node came from, in the architecture's preference order (§8); composed marks nodes placed by composition."
+values = ["existing_test", "schema", "recording", "conversation", "route", "task", "session", "model_proposal", "composed"]
+
+[enum.Expectation]
+doc = "What executing a node should do (Q16). A 2xx response never implies an immediate write: async_ack is settled only by a later completion observation."
+values = ["read", "write", "idempotent_noop", "async_ack", "rejection", "unknown"]
+
+[record.Completion]
+doc = "The later observation that settles an asynchronous acknowledgment: an operation whose values match the bindings, within a bound."
+fields = [
+  { name = "op", type = "OperationRef" },
+  { name = "matches", type = "map<Binding>" },
+  { name = "within_ms", type = "u64" },
+]
+
+[record.ActionNode]
+doc = "One action. Additive R5 fields: source, expected outcome, completion for async acknowledgments, the workflow it belongs to and the node it retries (same logical intent)."
+fields = [
+  { name = "id", type = "id" },
+  { name = "actor", type = "id" },
+  { name = "stage", type = "Stage" },
+  { name = "op", type = "OperationRef" },
+  { name = "inputs", type = "map<Binding>" },
+  { name = "outputs", type = "map<id>" },
+  { name = "after", type = "list<id>" },
+  { name = "source", type = "option<WorkloadSource>" },
+  { name = "expect", type = "option<Expectation>" },
+  { name = "completion", type = "option<Completion>" },
+  { name = "workflow", type = "option<id>" },
+  { name = "retry_of", type = "option<id>" },
+]
+
+[record.ActionGraph]
+doc = "Workload: actors, typed slots and action nodes with data bindings and ordering constraints."
+fields = [
+  { name = "id", type = "id" },
+  { name = "actors", type = "list<Actor>" },
+  { name = "slots", type = "list<Slot>" },
+  { name = "nodes", type = "list<ActionNode>" },
+]
+
+[record.WorkloadPins]
+doc = "What a promoted or frozen workload is bound to: the project revision (including edits made in a session), the environment spec and the configuration values it was captured with."
+fields = [
+  { name = "revision", type = "digest" },
+  { name = "environment", type = "option<digest>" },
+  { name = "config", type = "map<string>" },
+]
+
+[record.WorkloadRecipe]
+doc = "A runnable workload: its graph, where it came from, supporting evidence, pins, parameter defaults for its slots, what is missing, and whether it may claim clean-reset replay (false while any gap blocks it)."
+fields = [
+  { name = "id", type = "id" },
+  { name = "graph", type = "ActionGraph" },
+  { name = "sources", type = "list<WorkloadSource>" },
+  { name = "evidence", type = "list<Fact>" },
+  { name = "pins", type = "option<WorkloadPins>" },
+  { name = "parameters", type = "map<value>" },
+  { name = "gaps", type = "list<Gap>" },
+  { name = "replayable", type = "bool" },
+]
+
+[enum.Attribution]
+doc = "How effects were tied to a node: carrier = the application propagated the node id to the store (e.g. a SQL comment); window = only by entity and time window; none = not tied."
+values = ["carrier", "window", "none"]
+
+[record.NodeOutcome]
+doc = "How one executed node behaved, classified from attributed committed effects, receipts and completion observations, never from the response status alone. unknown when evidence is incomplete."
+fields = [
+  { name = "node", type = "id" },
+  { name = "expected", type = "option<Expectation>" },
+  { name = "observed", type = "Expectation" },
+  { name = "status", type = "option<i64>" },
+  { name = "committed", type = "u64" },
+  { name = "receipts", type = "u64" },
+  { name = "completed", type = "option<bool>" },
+  { name = "attribution", type = "Attribution" },
+  { name = "detail", type = "string" },
+]
+
+[enum.ContentionStrength]
+doc = "real = overlapping committed transactions of different workflows and actors with intersecting exact/predicate footprints; possible = overlap where a footprint is unknown (e.g. inserts)."
+values = ["real", "possible"]
+
+[record.Contention]
+doc = "Evidence that different workflows contended on shared state in one trial."
+fields = [
+  { name = "ns", type = "string" },
+  { name = "keys", type = "list<string>" },
+  { name = "transactions", type = "list<id>" },
+  { name = "nodes", type = "list<id>" },
+  { name = "workflows", type = "list<id>" },
+  { name = "actors", type = "list<id>" },
+  { name = "strength", type = "ContentionStrength" },
+  { name = "attribution", type = "Attribution" },
+]
+
+[enum.FaultClass]
+doc = "Injected fault classes (R7, architecture 10.2), each offered as an alternative and counted only once acknowledged (dispatched and settled). timeout_before_effect: the request is lost before the provider acts; timeout_after_effect: the provider commits and the reply is lost; partial_effect: a multi-part operation commits a strict prefix, then its reply is lost; duplicate_delivery: a request reaches the provider twice (a transport retry); ack_loss: a message acknowledgment is lost and the broker redelivers the message; crash_restart: an actor loses its in-memory state (locals, open transaction, held messages, which are redelivered) and restarts, durable effects kept. Redelivery is a consequence of ack_loss and crash_restart, not a class of its own."
+values = ["timeout_before_effect", "timeout_after_effect", "partial_effect", "duplicate_delivery", "ack_loss", "crash_restart"]
+
+[enum.ChoiceSource]
+doc = "Where data alternatives come from. recorded: a finite set of persisted responses or inputs, replayed without calling anything; sampled: fresh draws from a model or generator, persisted when drawn. Neither enumerates the source's output space; sampled alternatives are a separate experiment with its own budget and claims."
+values = ["recorded", "sampled"]
+
+[union.AlternativeKind]
+doc = "What an alternative perturbs besides schedule order (R7). fault: an injected fault of class on the operation whose ordinary alternative is `of`; timer: expiry of `timer` at virtual deadline `deadline` (virtual time advances only by selected expiries); data: one alternative value of `slot` (a recorded model response, retrieved document or tool output) labelled `label`."
+[union.AlternativeKind.variants]
+fault = [{ name = "class", type = "FaultClass" }, { name = "of", type = "id" }]
+timer = [{ name = "timer", type = "string" }, { name = "deadline", type = "u64" }]
+data = [{ name = "slot", type = "string" }, { name = "label", type = "string" }, { name = "source", type = "ChoiceSource" }]
+
+[record.Alternative]
+doc = "One eligible operation. id derives from logical lineage and occurrence (stable across re-execution); actor is the sequential process performing it. footprints over-approximate what it may touch: an empty list means unknown scope in every namespace. enabled_by (R6): alternatives already executed in this trial that made it eligible (spawn, send); absent means unknown, and reductions that need it fall back to full exploration. kind (R7): absent for an ordinary scheduling alternative; otherwise the fault, timer expiry or data value it selects."
+fields = [
+  { name = "id", type = "id" },
+  { name = "op", type = "OperationRef" },
+  { name = "actor", type = "option<id>" },
+  { name = "footprints", type = "list<Footprint>" },
+  { name = "enabled_by", type = "option<list<id>>" },
+  { name = "kind", type = "option<AlternativeKind>" },
+]
+
+[record.Decision]
+doc = "A before-effect choice offered by an adapter, with its eligible alternatives and exclusions."
+fields = [
+  { name = "id", type = "id" },
+  { name = "context", type = "ExecutionContext" },
+  { name = "trigger", type = "string" },
+  { name = "eligible", type = "list<Alternative>" },
+  { name = "excluded", type = "map<string>" },
+  { name = "chosen", type = "option<id>" },
+]
+
+[record.ResetParticipant]
+fields = [
+  { name = "resource", type = "id" },
+  { name = "method", type = "string" },
+  { name = "verified", type = "bool" },
+  { name = "detail", type = "string" },
+]
+
+[record.ResetReceipt]
+fields = [
+  { name = "environment", type = "id" },
+  { name = "generation", type = "u64" },
+  { name = "participants", type = "list<ResetParticipant>" },
+  { name = "unknown_state", type = "list<string>" },
+  { name = "complete", type = "bool" },
+]
+
+[union.Command]
+doc = "Adapter protocol command bodies. offer -> apply (the permit) -> ack (dispatch: status applied, or duplicate/rejected without effect) -> settle (R6: the permitted operation's effect settled; phase is terminal; accesses are what it actually touched when the adapter can observe it, absent = not observed)."
+[union.Command.variants]
+hello = [{ name = "adapter", type = "AdapterManifest" }]
+observe = [{ name = "observation", type = "Observation" }]
+offer = [{ name = "decision", type = "Decision" }]
+apply = [{ name = "decision", type = "id" }, { name = "choice", type = "id" }]
+ack = [{ name = "of", type = "id" }, { name = "status", type = "CommandStatus" }, { name = "detail", type = "option<string>" }]
+settle = [{ name = "decision", type = "id" }, { name = "choice", type = "id" }, { name = "phase", type = "Phase" }, { name = "accesses", type = "option<list<Footprint>>" }, { name = "detail", type = "option<string>" }]
+reset = [{ name = "generation", type = "u64" }]
+stop = [{ name = "reason", type = "string" }]
+
+[record.Envelope]
+doc = "Every protocol message: session, execution context (fencing generation included), sequence and command identity. geo/1 envelopes (trial + generation) are migrated by the compat readers."
+fields = [
+  { name = "protocol", type = "string" },
+  { name = "session", type = "id" },
+  { name = "context", type = "ExecutionContext" },
+  { name = "seq", type = "u64" },
+  { name = "command", type = "id" },
+  { name = "body", type = "Command" },
+]
+
+[record.CheckResult]
+fields = [
+  { name = "rule", type = "id" },
+  { name = "verdict", type = "CheckVerdict" },
+  { name = "intent", type = "IntentLevel" },
+  { name = "witnesses", type = "list<id>" },
+  { name = "detail", type = "string" },
+]
+
+[record.TrialRecord]
+doc = "Execution state, semantic verdicts and reproducibility are separate fields (architecture §4.4)."
+fields = [
+  { name = "id", type = "id" },
+  { name = "campaign", type = "id" },
+  { name = "generation", type = "u64" },
+  { name = "execution", type = "ExecutionState" },
+  { name = "checks", type = "list<CheckResult>" },
+  { name = "reproduction", type = "ReproductionState" },
+]
+
+# ------------------------------------------------- discovery and execution (R2)
+
+[enum.Ecosystem]
+doc = "Language/build ecosystem of a module. Build tools are data in Target.tool, not schema."
+values = ["javascript", "python", "jvm", "go", "rust", "c_cpp", "dotnet", "ruby", "php", "generic"]
+
+[enum.TargetKind]
+doc = "install/generate run in the prepare phase (network); migrate/seed run against provisioned services before tests; test/launch/build/fuzz as named."
+values = ["install", "generate", "build", "migrate", "seed", "test", "launch", "fuzz"]
+
+[enum.Confidence]
+doc = "certain: read from an authoritative declaration; likely: inferred by convention; assumed: a default chosen without evidence."
+values = ["certain", "likely", "assumed"]
+
+[enum.TestOutcome]
+values = ["passed", "failed", "errored", "skipped", "not_run"]
+
+[enum.NetworkPolicy]
+doc = "none: no network; prepare_only: network while installing, disconnected before tests; open: unrestricted (discovery sessions only)."
+values = ["none", "prepare_only", "open"]
+
+[enum.SessionMode]
+values = ["discovery", "campaign"]
+
+[record.SourceSpan]
+fields = [
+  { name = "path", type = "string" },
+  { name = "line", type = "option<u32>" },
+]
+
+[record.Fact]
+doc = "A discovery fact with its source evidence, analyzer and uncertainty."
+fields = [
+  { name = "kind", type = "string" },
+  { name = "detail", type = "string" },
+  { name = "span", type = "SourceSpan" },
+  { name = "analyzer", type = "string" },
+  { name = "confidence", type = "Confidence" },
+]
+
+[record.Toolchain]
+fields = [
+  { name = "runtime", type = "string" },
+  { name = "version", type = "string" },
+  { name = "image", type = "string" },
+  { name = "confidence", type = "Confidence" },
+  { name = "source", type = "option<SourceSpan>" },
+]
+
+[record.Module]
+fields = [
+  { name = "id", type = "id" },
+  { name = "path", type = "string" },
+  { name = "ecosystem", type = "Ecosystem" },
+  { name = "manifests", type = "list<string>" },
+  { name = "toolchain", type = "Toolchain" },
+  { name = "facts", type = "list<Fact>" },
+]
+
+[record.Target]
+fields = [
+  { name = "id", type = "id" },
+  { name = "module", type = "id" },
+  { name = "kind", type = "TargetKind" },
+  { name = "tool", type = "string" },
+  { name = "command", type = "list<string>" },
+  { name = "cwd", type = "string" },
+  { name = "reports", type = "list<string>" },
+  { name = "needs", type = "list<string>" },
+  { name = "facts", type = "list<Fact>" },
+]
+
+[record.Ambiguity]
+doc = "Competing candidates that discovery will not choose between; resolved by a remembered decision."
+fields = [
+  { name = "id", type = "id" },
+  { name = "module", type = "id" },
+  { name = "subject", type = "string" },
+  { name = "choices", type = "list<string>" },
+  { name = "reason", type = "string" },
+]
+
+[record.Gap]
+doc = "Something Geometer cannot do for this project, with the capability it blocks and whether a human must supply input."
+fields = [
+  { name = "id", type = "id" },
+  { name = "capability", type = "Capability" },
+  { name = "subject", type = "string" },
+  { name = "reason", type = "string" },
+  { name = "needs_human", type = "bool" },
+]
+
+[record.ProjectGraph]
+fields = [
+  { name = "revision", type = "ProjectRevision" },
+  { name = "analyzer", type = "string" },
+  { name = "modules", type = "list<Module>" },
+  { name = "targets", type = "list<Target>" },
+  { name = "ambiguities", type = "list<Ambiguity>" },
+  { name = "gaps", type = "list<Gap>" },
+]
+
+[record.TestCase]
+fields = [
+  { name = "id", type = "string" },
+  { name = "outcome", type = "TestOutcome" },
+  { name = "duration_ms", type = "option<u64>" },
+  { name = "message", type = "option<string>" },
+]
+
+[enum.EndpointPurpose]
+doc = "prepare: dependency installation; test: controlled trials (the only purpose that can support a safe-test claim); live_discovery: explicit open exploration, never a safe test."
+values = ["prepare", "test", "live_discovery"]
+
+[enum.EndpointAction]
+doc = "allow: reach the endpoint as named; route_to_double: send to a controlled tool binding; deny: refuse the connection."
+values = ["allow", "route_to_double", "deny"]
+
+[enum.ModelAccess]
+doc = "none; recorded: model calls answered from recordings (an unmatched call diverges, never falls back to live); broker: live model calls through a restricted broker."
+values = ["none", "recorded", "broker"]
+
+[record.EndpointRule]
+doc = "Matches a hostname exactly or, with a leading '*.', any subdomain. IP literals never match hostname rules. ports empty = any port."
+fields = [
+  { name = "host", type = "string" },
+  { name = "ports", type = "list<u32>" },
+  { name = "action", type = "EndpointAction" },
+  { name = "target", type = "option<id>" },
+]
+
+[record.EndpointPolicy]
+doc = "Which endpoints a sandbox may reach, decided per connection at the sandbox network (redirects, alternate DNS/IP and child processes get no exemption). enforcement names the mechanism."
+fields = [
+  { name = "purpose", type = "EndpointPurpose" },
+  { name = "default", type = "EndpointAction" },
+  { name = "rules", type = "list<EndpointRule>" },
+  { name = "model_access", type = "ModelAccess" },
+  { name = "enforcement", type = "string" },
+]
+
+[record.SandboxSession]
+fields = [
+  { name = "id", type = "id" },
+  { name = "provider", type = "string" },
+  { name = "image", type = "string" },
+  { name = "image_digest", type = "option<string>" },
+  { name = "mode", type = "SessionMode" },
+  { name = "network", type = "NetworkPolicy" },
+  { name = "endpoints", type = "option<EndpointPolicy>" },
+  { name = "revision", type = "ProjectRevision" },
+  { name = "limits", type = "map<string>" },
+]
+
+[record.TargetRun]
+doc = "One execution of a target. complete=false whenever results may be partial (timeout, cancellation, missing report)."
+fields = [
+  { name = "target", type = "id" },
+  { name = "session", type = "SandboxSession" },
+  { name = "execution", type = "ExecutionState" },
+  { name = "exit_code", type = "option<i64>" },
+  { name = "duration_ms", type = "u64" },
+  { name = "cases", type = "list<TestCase>" },
+  { name = "complete", type = "bool" },
+  { name = "notes", type = "list<string>" },
+]
+
+# ------------------------------------------------------- environments (R3)
+
+[enum.ServiceKind]
+doc = "recipe: a known service recipe owns readiness/state/reset semantics; application: built or launched from the project; opaque: provisioned without state semantics (visibly uncontrolled)."
+values = ["recipe", "application", "opaque"]
+
+[enum.ResetMethod]
+doc = "recreate (fresh container and volume: the correctness baseline) or a targeted method admitted only by an equivalence test."
+values = ["recreate", "template_restore", "flush", "purge_queues", "none"]
+
+[record.CopySpec]
+doc = "A project path copied into a service at start (translation of a bind mount; the checkout itself is never mounted)."
+fields = [
+  { name = "source", type = "string" },
+  { name = "target", type = "string" },
+]
+
+[record.ServiceSpec]
+fields = [
+  { name = "id", type = "id" },
+  { name = "kind", type = "ServiceKind" },
+  { name = "recipe", type = "option<id>" },
+  { name = "image", type = "string" },
+  { name = "version", type = "string" },
+  { name = "confidence", type = "Confidence" },
+  { name = "build_context", type = "option<string>" },
+  { name = "build_dockerfile", type = "option<string>" },
+  { name = "build_target", type = "option<string>" },
+  { name = "env", type = "map<string>" },
+  { name = "command", type = "list<string>" },
+  { name = "entrypoint", type = "list<string>" },
+  { name = "aliases", type = "list<string>" },
+  { name = "depends_on", type = "list<id>" },
+  { name = "copies", type = "list<CopySpec>" },
+  { name = "healthcheck", type = "list<string>" },
+  { name = "reset", type = "ResetMethod" },
+  { name = "capabilities", type = "list<CapabilityObservation>" },
+  { name = "facts", type = "list<Fact>" },
+]
+
+[record.EnvBinding]
+doc = "A connection setting Geometer supplies to application processes (test-only values; never a live endpoint)."
+fields = [
+  { name = "variable", type = "string" },
+  { name = "value", type = "string" },
+  { name = "service", type = "id" },
+  { name = "reason", type = "string" },
+]
+
+[enum.SecretOrigin]
+doc = "Where a secret value came from. project_config: inline in the project's configuration; generated_test: a Geometer-generated test credential."
+values = ["project_config", "generated_test"]
+
+[record.SecretRef]
+doc = "A secret held outside plans and artifacts. Plans carry ${geo-secret:<id>} in its place; the value resolves only when an authorized execution starts. location names where it was found, never the value."
+fields = [
+  { name = "id", type = "id" },
+  { name = "origin", type = "SecretOrigin" },
+  { name = "location", type = "string" },
+]
+
+[record.ToolBinding]
+doc = "A tool the application calls, bound to a controlled double. hosts are the names the application uses; the gateway answers on them (route to double). routes map 'METHOD /path' to an operation; seed is the double's initial state."
+fields = [
+  { name = "tool", type = "id" },
+  { name = "double", type = "string" },
+  { name = "hosts", type = "list<string>" },
+  { name = "port", type = "u32" },
+  { name = "account", type = "id" },
+  { name = "fidelity", type = "Fidelity" },
+  { name = "contracts", type = "list<ToolContract>" },
+  { name = "routes", type = "map<string>" },
+  { name = "seed", type = "map<string>" },
+]
+
+[record.ModelBinding]
+doc = "A model endpoint the application calls. stand_in names the local upstream used when recording (e.g. a scripted model); provider names a live endpoint that is never called automatically."
+fields = [
+  { name = "id", type = "id" },
+  { name = "hosts", type = "list<string>" },
+  { name = "port", type = "u32" },
+  { name = "stand_in", type = "string" },
+  { name = "provider", type = "option<string>" },
+]
+
+[record.EnvironmentSpec]
+doc = "Resolved environment plan: service identities are logical names (two services of one type stay distinct)."
+fields = [
+  { name = "id", type = "id" },
+  { name = "revision", type = "ProjectRevision" },
+  { name = "source", type = "string" },
+  { name = "services", type = "list<ServiceSpec>" },
+  { name = "bindings", type = "list<EnvBinding>" },
+  { name = "secrets", type = "list<SecretRef>" },
+  { name = "tools", type = "list<ToolBinding>" },
+  { name = "models", type = "list<ModelBinding>" },
+  { name = "gaps", type = "list<Gap>" },
+]
+
+[record.StateDigest]
+doc = "Verification projection of one service's state. deterministic=false means repeated fresh provisioning produced different digests, so the digest cannot verify a reset."
+fields = [
+  { name = "service", type = "id" },
+  { name = "digest", type = "string" },
+  { name = "projection", type = "string" },
+  { name = "deterministic", type = "bool" },
+]
+
+# --------------------------------------------------------- rules and state (R4)
+
+[record.Condition]
+doc = "A row/effect condition: column equals value (Absent never matches)."
+fields = [
+  { name = "column", type = "string" },
+  { name = "equals", type = "value" },
+]
+
+[record.ConservedTerm]
+fields = [
+  { name = "ns", type = "string" },
+  { name = "column", type = "string" },
+  { name = "group_by", type = "string" },
+  { name = "coefficient", type = "i64" },
+]
+
+[record.Transition]
+fields = [
+  { name = "from", type = "value" },
+  { name = "to", type = "value" },
+]
+
+[union.RuleBody]
+doc = "Typed rule families (architecture section 9.1). exclusive_effects (R7): for one entity (the values of the entity argument fields), at most one of the listed operations of a tool may commit. effect_requires_reading (R7): every committed effect of the operation must carry the named dispatch-time reading as true. ns is <service>.<table>. State families read the final state: not_null (a present, non-null value), value_domain (non-null values among allowed; numbers compare by value), unique_key (no two rows share a key without nulls), reference (every key without nulls exists in target_ns)."
+[union.RuleBody.variants]
+numeric_bound = [{ name = "ns", type = "string" }, { name = "column", type = "string" }, { name = "min", type = "option<value>" }, { name = "max", type = "option<value>" }]
+conservation = [{ name = "terms", type = "list<ConservedTerm>" }]
+enum_transitions = [{ name = "ns", type = "string" }, { name = "column", type = "string" }, { name = "allowed", type = "list<Transition>" }]
+at_most_once = [{ name = "op", type = "string" }, { name = "identity", type = "list<string>" }]
+at_most_once_effect = [{ name = "tool", type = "id" }, { name = "operation", type = "string" }]
+argument_allowlist = [{ name = "tool", type = "id" }, { name = "operation", type = "string" }, { name = "field", type = "string" }, { name = "allowed_suffixes", type = "list<string>" }]
+call_bound_approval = [{ name = "tool", type = "id" }, { name = "operation", type = "string" }, { name = "amount_field", type = "string" }, { name = "threshold", type = "value" }, { name = "approval_field", type = "string" }]
+bounded_completion = [{ name = "trigger_op", type = "string" }, { name = "trigger_field", type = "string" }, { name = "completion_op", type = "string" }, { name = "completion_field", type = "string" }]
+row_invariant = [{ name = "ns", type = "string" }, { name = "when", type = "list<Condition>" }, { name = "left", type = "string" }, { name = "right", type = "string" }]
+not_null = [{ name = "ns", type = "string" }, { name = "column", type = "string" }]
+value_domain = [{ name = "ns", type = "string" }, { name = "column", type = "string" }, { name = "allowed", type = "list<value>" }]
+unique_key = [{ name = "ns", type = "string" }, { name = "columns", type = "list<string>" }]
+reference = [{ name = "ns", type = "string" }, { name = "columns", type = "list<string>" }, { name = "target_ns", type = "string" }, { name = "target_columns", type = "list<string>" }]
+exclusive_effects = [{ name = "tool", type = "id" }, { name = "operations", type = "list<string>" }, { name = "entity", type = "list<string>" }]
+effect_requires_reading = [{ name = "tool", type = "id" }, { name = "operation", type = "string" }, { name = "reading", type = "string" }]
+
+[enum.EvidenceNeed]
+doc = "Evidence a rule's meaning requires. Missing required evidence makes a result unknown, never a pass."
+values = ["baseline_state", "final_state", "statement_history", "transaction_outcomes", "settled_trial", "effect_receipts"]
+
+[record.RuleMeaning]
+doc = "The part of a rule that defines what it means. Its canonical digest is the rule's semantics digest; ids, intent level and provenance are not meaning."
+fields = [
+  { name = "body", type = "RuleBody" },
+  { name = "unless", type = "list<Condition>" },
+  { name = "units", type = "map<string>" },
+  { name = "evidence", type = "list<EvidenceNeed>" },
+]
+
+[record.RuleVersion]
+doc = "An immutable typed rule: meaning, its semantics digest (sha256 of the meaning's canonical bytes), intent level and provenance. Rows/effects matching any unless condition are exempt. A digest that does not match the meaning is refused."
+fields = [
+  { name = "id", type = "id" },
+  { name = "meaning", type = "RuleMeaning" },
+  { name = "digest", type = "digest" },
+  { name = "intent", type = "IntentLevel" },
+  { name = "provenance", type = "string" },
+]
+
+[enum.RuleMode]
+doc = "explore: evaluate recorded trials; guard: decide before an effect; prove: record evidence of what happened."
+values = ["explore", "guard", "prove"]
+
+[enum.FailurePolicy]
+doc = "What a binding does when its evidence is missing or stale. unknown reports it; deny/hold stop the action (guard only); record_only lets it proceed with the gap recorded."
+values = ["unknown", "deny", "hold", "record_only"]
+
+[union.BindingSupport]
+doc = "Whether this mode can honour the rule's meaning with the named adapters. unsupported always states why; it never degrades silently to a weaker check."
+[union.BindingSupport.variants]
+supported = []
+unsupported = [{ name = "reason", type = "string" }]
+
+[record.RuleBinding]
+doc = "How one RuleVersion runs in one mode: adapters, state projection, freshness, coordination and failure policy. A binding pins the rule digest; it cannot change rule meaning."
+fields = [
+  { name = "rule", type = "id" },
+  { name = "rule_digest", type = "digest" },
+  { name = "mode", type = "RuleMode" },
+  { name = "adapters", type = "list<id>" },
+  { name = "projection", type = "string" },
+  { name = "freshness_ms", type = "option<u64>" },
+  { name = "coordination", type = "string" },
+  { name = "failure", type = "FailurePolicy" },
+  { name = "support", type = "BindingSupport" },
+]
+
+[enum.RuleBasis]
+doc = "Why a candidate rule was proposed. declared_constraint: a schema, API description or store states it; contract_template: a template applied to a declared ToolContract; test_assertion: lifted from an existing test (its fixture scope may be narrower); observed_regularity: a regularity seen in executions, which is not stated intent; model_proposal: a model proposed it from the cited excerpt (optional assistance, R8b): a suggestion to check, never evidence of intent."
+values = ["declared_constraint", "contract_template", "test_assertion", "observed_regularity", "model_proposal"]
+
+[record.RuleSource]
+doc = "One source of a proposed rule: where it was read, by which analyzer, and the text read. enforced_by names the service whose store enforces the constraint itself (a violation there needs a bypass); absent when nothing is known to enforce it."
+fields = [
+  { name = "span", type = "SourceSpan" },
+  { name = "analyzer", type = "string" },
+  { name = "basis", type = "RuleBasis" },
+  { name = "excerpt", type = "string" },
+  { name = "enforced_by", type = "option<string>" },
+]
+
+[record.RuleCandidate]
+doc = "A proposed rule. Its intent is candidate_rule until an accepted review of its exact digest; proposals with the same meaning digest are one candidate that keeps every source. baseline is the rule's result on the declared seed state, when a source declares one; a violated baseline is kept as a candidate finding, never used to drop the candidate."
+fields = [
+  { name = "rule", type = "RuleVersion" },
+  { name = "sources", type = "list<RuleSource>" },
+  { name = "bindings", type = "list<RuleBinding>" },
+  { name = "baseline", type = "option<CheckResult>" },
+]
+
+[enum.RejectionClass]
+doc = "Why a proposal did not become a candidate. unknown_table/unknown_column/unknown_operation: it names something the project does not declare; type_mismatch: a value or family does not fit the declared type; impossible_observation: no observer can supply the evidence it needs; unsupported_semantics: no family expresses the source exactly (never approximated); fixture_scoped: holds for one test fixture only; unbound: the source names no binding target."
+values = ["unknown_table", "unknown_column", "unknown_operation", "type_mismatch", "impossible_observation", "unsupported_semantics", "fixture_scoped", "unbound"]
+
+[record.RuleRejection]
+doc = "A proposal that was not turned into a candidate, with its source and reason. Rejections are counted and reported, never dropped silently."
+fields = [
+  { name = "source", type = "RuleSource" },
+  { name = "class", type = "RejectionClass" },
+  { name = "subject", type = "string" },
+  { name = "detail", type = "string" },
+]
+
+[record.StateSnapshot]
+doc = "Observer read of one table (bypassing gateways, excluded from actor histories). consistency names the isolation used."
+fields = [
+  { name = "ns", type = "string" },
+  { name = "moment", type = "string" },
+  { name = "consistency", type = "string" },
+  { name = "rows", type = "list<map<value>>" },
+]
+
+# ------------------------------------------- actions, tools and effects (R4a)
+
+[enum.EffectClass]
+doc = "read: no external effect; effect: changes provider/tool state; unknown: not established (treated as effect for safety claims)."
+values = ["read", "effect", "unknown"]
+
+[enum.Fidelity]
+doc = "What stands behind a tool binding. simulated: a Geometer-controlled double; provider_test_account: the real provider in test mode; live: real effects (never used automatically)."
+values = ["simulated", "provider_test_account", "live"]
+
+[enum.EffectStatus]
+doc = "What the provider actually did, as far as evidence shows. pending: accepted, not yet final; unknown: no qualified evidence either way."
+values = ["committed", "aborted", "pending", "unknown"]
+
+[union.IntentKey]
+doc = "How a tool call's logical intent is identified. fields: named top-level arguments form the business identity, scoped by tenant, provider account, tool and operation. unsupported: no identity exists; deduplication is reported unsupported, never guessed from argument equality."
+[union.IntentKey.variants]
+fields = [{ name = "names", type = "list<string>" }]
+unsupported = [{ name = "reason", type = "string" }]
+
+[record.ProviderIdempotency]
+doc = "Provider-side idempotency: the request field carrying the key and how long the provider honours it (absent = unknown)."
+fields = [
+  { name = "key_field", type = "string" },
+  { name = "lifetime_seconds", type = "option<u64>" },
+]
+
+[record.ToolContract]
+doc = "Semantics of one tool operation, versioned independently of its schema. A successful return is not a commit; receipt_lookup (legacy flag) says whether effects can be independently confirmed, and receipt (when present) says how: the path, the identity to match and which provider states count as confirmed. A contract with receipt present always has receipt_lookup true."
+fields = [
+  { name = "tool", type = "id" },
+  { name = "operation", type = "string" },
+  { name = "semantics", type = "string" },
+  { name = "input_schema", type = "option<digest>" },
+  { name = "effect_class", type = "EffectClass" },
+  { name = "intent_key", type = "IntentKey" },
+  { name = "authority", type = "list<string>" },
+  { name = "units", type = "map<string>" },
+  { name = "provider_idempotency", type = "option<ProviderIdempotency>" },
+  { name = "receipt_lookup", type = "bool" },
+  { name = "fidelity", type = "Fidelity" },
+  { name = "reset_scope", type = "string" },
+  # M3 (ADR-0039): the structured, versioned receipt-lookup declaration. receipt_lookup stays for
+  # legacy readers and is true whenever this is present.
+  { name = "receipt", type = "option<ReceiptLookup>" },
+]
+
+[record.IntentKeyMaterial]
+doc = "Canonical input of an intent id: sha256 of this record's canonical bytes, prefixed intent:. Every language derives the same id."
+fields = [
+  { name = "tool", type = "id" },
+  { name = "operation", type = "string" },
+  { name = "semantics", type = "string" },
+  { name = "tenant", type = "option<id>" },
+  { name = "provider_account", type = "id" },
+  { name = "key", type = "map<value>" },
+]
+
+[record.ActionIntent]
+doc = "One logical business action (e.g. one requested refund). Equal arguments do not make two intents equal; only the contract's intent key does."
+fields = [
+  { name = "id", type = "id" },
+  { name = "context", type = "ExecutionContext" },
+  { name = "material", type = "IntentKeyMaterial" },
+  { name = "principal", type = "option<PrincipalContext>" },
+]
+
+[record.ActionAttempt]
+doc = "One dispatch of a tool call. intent is absent when the contract has no intent key (deduplication unsupported). ordinal counts attempts of the same intent (or lineage) from 1."
+fields = [
+  { name = "id", type = "id" },
+  { name = "context", type = "ExecutionContext" },
+  { name = "tool", type = "id" },
+  { name = "operation", type = "string" },
+  { name = "intent", type = "option<id>" },
+  { name = "ordinal", type = "u64" },
+  { name = "arguments", type = "digest" },
+]
+
+[record.EffectReceipt]
+doc = "What the provider did, from provider-originated or independently observed evidence. A tool's own success reply alone is at most inferred. readings (R7 live timers) are what the provider observed at dispatch, such as a virtual clock reading and whether the approval or lease the call cited was valid or held; absent when the provider records none."
+fields = [
+  { name = "id", type = "id" },
+  { name = "context", type = "ExecutionContext" },
+  { name = "attempt", type = "option<id>" },
+  { name = "intent", type = "option<id>" },
+  { name = "provider", type = "id" },
+  { name = "operation", type = "string" },
+  { name = "provider_account", type = "id" },
+  { name = "provider_effect", type = "option<string>" },
+  { name = "arguments", type = "map<value>" },
+  { name = "status", type = "EffectStatus" },
+  { name = "strength", type = "EvidenceStrength" },
+  { name = "observed_by", type = "id" },
+  { name = "readings", type = "option<map<value>>" },
+]
+
+# ------------------------------------------ approvals and rule activation (R4c)
+
+[record.Approval]
+doc = "A human approval of one exact call: call is the digest of the call's arguments without the approval field. Issued by an approval authority, never by the acting workload; single use."
+fields = [
+  { name = "id", type = "id" },
+  { name = "tool", type = "id" },
+  { name = "operation", type = "string" },
+  { name = "call", type = "digest" },
+  { name = "approver", type = "id" },
+  { name = "consumed_by", type = "option<string>" },
+]
+
+[enum.ActivationState]
+doc = "candidate -> intent_reviewed -> ci_enabled -> guard_shadow -> production. Every step after candidate needs an authorized review of the exact rule digest."
+values = ["candidate", "intent_reviewed", "ci_enabled", "guard_shadow", "production"]
+
+[record.Review]
+doc = "An authorized decision about one exact rule meaning (digest) and scope."
+fields = [
+  { name = "reviewer", type = "id" },
+  { name = "rule_digest", type = "digest" },
+  { name = "scope", type = "string" },
+  { name = "accepted", type = "bool" },
+  { name = "note", type = "string" },
+]
+
+[record.Activation]
+doc = "Where one RuleVersion may run. Pinned to the rule digest: a changed meaning is a new, candidate rule."
+fields = [
+  { name = "rule", type = "id" },
+  { name = "rule_digest", type = "digest" },
+  { name = "state", type = "ActivationState" },
+  { name = "reviews", type = "list<Review>" },
+]
+
+# ----------------------------------------------------- agent discovery (R4)
+
+[record.AgentFinding]
+doc = "An application module that behaves as an agent, from static evidence only (manifests, source, configuration). endpoints are hosts it is configured to call; tools/models name the bindings they resolve to."
+fields = [
+  { name = "module", type = "string" },
+  { name = "service", type = "option<id>" },
+  { name = "ecosystem", type = "Ecosystem" },
+  { name = "model_clients", type = "list<string>" },
+  { name = "mcp_clients", type = "list<string>" },
+  { name = "endpoints", type = "list<string>" },
+  { name = "tools", type = "list<id>" },
+  { name = "models", type = "list<id>" },
+  { name = "evidence", type = "list<Fact>" },
+]
+
+[record.AgentDiscovery]
+doc = "Agents, MCP server configurations and endpoints found without starting anything. An endpoint no tool/model binding covers is a gap; tool names alone never imply harmlessness."
+fields = [
+  { name = "agents", type = "list<AgentFinding>" },
+  { name = "mcp_servers", type = "list<string>" },
+  { name = "undeclared_endpoints", type = "list<string>" },
+  { name = "gaps", type = "list<Gap>" },
+]
+
+# ------------------------------------------------ findings and replay (R4d)
+
+[record.FaultChoice]
+doc = "A fault Geometer applied at a controlled boundary during a trial."
+fields = [
+  { name = "service", type = "id" },
+  { name = "decision", type = "id" },
+  { name = "choice", type = "id" },
+]
+
+[record.ReplayRecipe]
+doc = "What is needed to repeat a finding from a clean reset: the project revision, the task and agent, the faults, and the recorded model tape (an artifact digest). criterion names what a repetition must show."
+fields = [
+  { name = "revision", type = "digest" },
+  { name = "task", type = "string" },
+  { name = "agent", type = "id" },
+  { name = "faults", type = "list<FaultChoice>" },
+  { name = "tape", type = "option<digest>" },
+  { name = "criterion", type = "string" },
+]
+
+[record.Finding]
+doc = "A rule result worth a developer's attention, with the trial that showed it and how to replay it. intent carries whether the rule is approved or only a candidate."
+fields = [
+  { name = "id", type = "id" },
+  { name = "campaign", type = "id" },
+  { name = "trial", type = "id" },
+  { name = "rule", type = "id" },
+  { name = "rule_digest", type = "digest" },
+  { name = "intent", type = "IntentLevel" },
+  { name = "verdict", type = "CheckVerdict" },
+  { name = "detail", type = "string" },
+  { name = "witnesses", type = "list<id>" },
+  { name = "replay", type = "ReplayRecipe" },
+]
+
+# ------------------------------------------------------------ search (R6)
+
+[enum.SearchStrategy]
+doc = "random: seeded walks; exhaustive: every alternative at every decision (depth-first); sleep_sets / source_dpor: partial-order reductions over declared dependence, enabled only with adapter conformance evidence."
+values = ["random", "exhaustive", "sleep_sets", "source_dpor"]
+
+[record.ChoiceReach]
+doc = "Reach per class of non-schedule alternative (R7): class is fault:<FaultClass>, timer or data:<ChoiceSource>. offered = such alternatives at distinct explored decisions; explored = those permitted, acknowledged and settled in valid trials (an injected fault never counts without its acknowledgment). Counts, never a share of possible faults or outputs."
+fields = [
+  { name = "class", type = "string" },
+  { name = "offered", type = "u64" },
+  { name = "explored", type = "u64" },
+]
+
+[record.SearchBudget]
+doc = "Bounds of one search: trials begun, permits issued (prefix replays included) and decisions per trial. Resume keeps the budget; extending it is an explicit act."
+fields = [
+  { name = "trials", type = "u64" },
+  { name = "permits", type = "u64" },
+  { name = "depth", type = "u32" },
+]
+
+[record.SearchReach]
+doc = "Bounded reach of a search, never a percentage of possible behaviour. decisions = distinct decision nodes explored; unexplored = eligible alternatives at frontier nodes neither explored nor soundly pruned; pruned = alternatives at finished nodes a reduction showed redundant; finished = frontier empty within the depth bound. A reduction is sound only for trials that were not depth-cut. choices (R7): counts per class of fault, timer and data alternatives; absent when none was offered."
+fields = [
+  { name = "trials", type = "u64" },
+  { name = "complete", type = "u64" },
+  { name = "sleep_blocked", type = "u64" },
+  { name = "depth_cut", type = "u64" },
+  { name = "invalid", type = "u64" },
+  { name = "decisions", type = "u64" },
+  { name = "permits", type = "u64" },
+  { name = "unexplored", type = "u64" },
+  { name = "pruned", type = "u64" },
+  { name = "exhausted", type = "option<string>" },
+  { name = "halted", type = "option<string>" },
+  { name = "finished", type = "bool" },
+  { name = "notes", type = "list<string>" },
+  { name = "choices", type = "option<list<ChoiceReach>>" },
+]
+
+[record.FrontierNode]
+doc = "One explored decision. at identifies the choice prefix that reached it; decision is the offer as first seen (chosen = the alternative being explored on the current path). backtrack: actors a reduction must still explore here; done: alternatives explored (taken, for random walks); sleep: alternatives asleep with the footprints they slept with; full: forced to explore every alternative."
+fields = [
+  { name = "at", type = "digest" },
+  { name = "depth", type = "u32" },
+  { name = "decision", type = "Decision" },
+  { name = "backtrack", type = "list<id>" },
+  { name = "done", type = "list<id>" },
+  { name = "sleep", type = "list<Alternative>" },
+  { name = "full", type = "bool" },
+]
+
+[record.Frontier]
+doc = "Durable, resumable search position. path: the depth-first stack whose chosen alternatives the next trial replays from a verified reset; visited: decisions seen by random walks. dependence pins the dependence policy (monitors, conformance evidence) the reduction state was computed under; generation is the last reset generation used. No state is merged or cached."
+fields = [
+  { name = "campaign", type = "id" },
+  { name = "strategy", type = "SearchStrategy" },
+  { name = "seed", type = "u64" },
+  { name = "budget", type = "SearchBudget" },
+  { name = "dependence", type = "digest" },
+  { name = "generation", type = "u64" },
+  { name = "path", type = "list<FrontierNode>" },
+  { name = "visited", type = "list<FrontierNode>" },
+  { name = "degraded", type = "option<string>" },
+  { name = "reach", type = "SearchReach" },
+]
+
+# ------------------------------- replay, minimization and change verification (R9)
+
+[enum.ReplayCriterion]
+doc = "What a replay must show. exact: every recorded decision is offered and permitted in order, faults and model tape match, node outcomes and the rule verdict repeat, inside the controlled envelope; property: the same rule meaning (digest) is violated again, schedule not required; workload: the workload runs again with its recorded node outcomes, with no claim about the rule."
+values = ["exact", "property", "workload"]
+
+[enum.ControlSource]
+doc = "Sources of behaviour a trial can control. A replay's envelope lists the ones its recording controlled; exact reproduction holds only within it."
+values = ["reset", "inputs", "schedule", "faults", "model", "tools", "time", "random"]
+
+[enum.ModelSource]
+doc = "Who answered the application's model requests. recorded_output: only the recorded tape (no model upstream; an unmatched request diverges); fresh_same_version: live calls to the recorded model version (sampling, uncontrolled); fresh_new_version: live calls to a different model version, a behaviour-change experiment and never a replay; none: no model request."
+values = ["none", "recorded_output", "fresh_same_version", "fresh_new_version"]
+
+[record.ModelPin]
+doc = "The application model a trial used: the binding it answered, the provider's model identifier and exposed revision (a mutable alias is not a version), and the recorded tape (an artifact digest) when replaying."
+fields = [
+  { name = "binding", type = "id" },
+  { name = "model", type = "string" },
+  { name = "revision", type = "option<string>" },
+  { name = "tape", type = "option<digest>" },
+]
+
+[record.PortableReplay]
+doc = "A self-contained replay recipe: rule meaning, pins (revision, environment, configuration), every other dependency digest, the workload with its generator seed, the full decision sequence (alternative ids in order), faults, the model pin, the controlled envelope, the recorded node outcomes and the criterion. Its identity is the digest of its canonical bytes. Credentials are slot references resolved by the replaying worker, never values."
+fields = [
+  { name = "rule", type = "id" },
+  { name = "rule_digest", type = "digest" },
+  { name = "finding", type = "option<id>" },
+  { name = "pins", type = "WorkloadPins" },
+  { name = "dependencies", type = "map<digest>" },
+  { name = "workload", type = "WorkloadRecipe" },
+  { name = "seed", type = "string" },
+  { name = "decisions", type = "list<id>" },
+  { name = "faults", type = "list<FaultChoice>" },
+  { name = "model", type = "option<ModelPin>" },
+  { name = "controlled", type = "list<ControlSource>" },
+  { name = "outcomes", type = "list<NodeOutcome>" },
+  { name = "criterion", type = "ReplayCriterion" },
+]
+
+[record.ReplayOutcome]
+doc = "The classified result of one replay: the recipe digest, the criterion and whether it was met, the strongest state shown, who answered model requests, every changed pin (incompatible whenever this is non-empty, even if the rule was violated again), the first divergence and the reasons."
+fields = [
+  { name = "recipe", type = "digest" },
+  { name = "criterion", type = "ReplayCriterion" },
+  { name = "state", type = "ReproductionState" },
+  { name = "criterion_met", type = "bool" },
+  { name = "model", type = "ModelSource" },
+  { name = "changed", type = "list<string>" },
+  { name = "divergence", type = "option<string>" },
+  { name = "reasons", type = "list<string>" },
+]
+
+[enum.ShrinkRejection]
+doc = "Why a smaller candidate witness was refused. Structural (never run): dropped_setup (removes declared setup), broken_binding (a kept node consumes, completes on or retries a removed node), invalid_workload. Executed: diverged (forced decisions not offered), unknown (evidence incomplete or the rule not evaluated), authentication (a kept node newly refused as unauthenticated or forbidden), different_violation (a rule not violated originally is violated), unexercised, not_violated, outcome_changed (a kept node behaves differently)."
+values = ["dropped_setup", "broken_binding", "invalid_workload", "diverged", "unknown", "authentication", "different_violation", "unexercised", "not_violated", "outcome_changed"]
+
+[record.ShrinkStep]
+doc = "One candidate the shrinker considered: its pass (setup, nodes, decisions, inputs, values), the change, whether it ran from reset, and acceptance or the rejection with detail."
+fields = [
+  { name = "pass", type = "string" },
+  { name = "change", type = "string" },
+  { name = "ran", type = "bool" },
+  { name = "accepted", type = "bool" },
+  { name = "rejection", type = "option<ShrinkRejection>" },
+  { name = "detail", type = "string" },
+]
+
+[enum.Minimality]
+doc = "smallest_known: the smallest witness found, no minimality claim; one_minimal: within the budget, no single removal or simplification of the kinds tried preserves the violation (not a global minimum)."
+values = ["smallest_known", "one_minimal"]
+
+[record.ShrinkSize]
+doc = "Witness size: workload nodes, removable inputs, forced decisions (ordering constraints kept) and decisions in the full schedule."
+fields = [
+  { name = "nodes", type = "u32" },
+  { name = "inputs", type = "u32" },
+  { name = "forced", type = "u32" },
+  { name = "decisions", type = "u32" },
+]
+
+[record.ShrinkReport]
+doc = "Minimization of one finding's witness while the same rule meaning stays violated with setup, bindings and kept-node outcomes preserved: sizes before and after, values simplified, the witness (workload and forced decisions in order), runs against the budget, the minimality claim, why it stopped early and every step considered."
+fields = [
+  { name = "rule", type = "id" },
+  { name = "rule_digest", type = "digest" },
+  { name = "original", type = "ShrinkSize" },
+  { name = "result", type = "ShrinkSize" },
+  { name = "simplified", type = "u32" },
+  { name = "workload", type = "WorkloadRecipe" },
+  { name = "forced", type = "list<id>" },
+  { name = "runs", type = "u32" },
+  { name = "budget", type = "u32" },
+  { name = "minimality", type = "Minimality" },
+  { name = "exhausted", type = "option<string>" },
+  { name = "steps", type = "list<ShrinkStep>" },
+]
+
+[record.ExerciseRequirement]
+doc = "What a run on a new revision must still exercise for its verdict to count: the node runs the operation and shows one of the allowed outcomes (a fix may turn a duplicate write into a no-op; a rejection or an unknown outcome counts only when listed)."
+fields = [
+  { name = "node", type = "id" },
+  { name = "op", type = "OperationRef" },
+  { name = "allowed", type = "list<Expectation>" },
+]
+
+[record.Regression]
+doc = "A retained finding: the rule meaning (immutable scope), the exercise requirements, the number of neighbourhood trials a fix verification must add to the replay, and the portable replay."
+fields = [
+  { name = "id", type = "id" },
+  { name = "finding", type = "option<id>" },
+  { name = "rule", type = "id" },
+  { name = "rule_digest", type = "digest" },
+  { name = "requirements", type = "list<ExerciseRequirement>" },
+  { name = "neighborhood", type = "u32" },
+  { name = "replay", type = "PortableReplay" },
+]
+
+[enum.FixVerdict]
+doc = "Fix verification on a new revision. reproduced: the rule is still violated (replay or neighbourhood); no_longer_reproduced: bindings valid, requirements exercised with complete evidence, no violation in the replay or the required neighbourhood (not a correctness proof); inconclusive: the obligation was not exercised or evidence is missing; incompatible: the rule, a dependency or the workload's bindings changed."
+values = ["reproduced", "no_longer_reproduced", "inconclusive", "incompatible"]
+
+[record.FixVerification]
+doc = "The verdict for one regression on one revision, with the replay outcome, run counts (replay included) and unmet requirements."
+fields = [
+  { name = "regression", type = "id" },
+  { name = "revision", type = "digest" },
+  { name = "verdict", type = "FixVerdict" },
+  { name = "replay", type = "ReplayOutcome" },
+  { name = "runs", type = "u32" },
+  { name = "exercised", type = "u32" },
+  { name = "violated", type = "u32" },
+  { name = "unmet", type = "list<string>" },
+  { name = "reasons", type = "list<string>" },
+]
+
+[enum.UpgradeResult]
+doc = "Behaviour of a new model version from fresh calls within a sampling budget. not_evaluated: no fresh call (recorded-output replay alone never evaluates an upgrade); violations_found; none_found_in_samples (sampling, not enumeration of model output); inconclusive (samples unexercised or incomplete)."
+values = ["not_evaluated", "violations_found", "none_found_in_samples", "inconclusive"]
+
+[record.ModelUpgradeReport]
+doc = "Two separate experiments for a model upgrade: recorded, the recorded-output regression replay (the old model's answers against the application); and fresh samples of the candidate model within a budget. claims are the only statements the report makes."
+fields = [
+  { name = "baseline", type = "ModelPin" },
+  { name = "candidate", type = "ModelPin" },
+  { name = "recorded", type = "option<ReplayOutcome>" },
+  { name = "samples", type = "u32" },
+  { name = "budget", type = "u32" },
+  { name = "violated", type = "u32" },
+  { name = "satisfied", type = "u32" },
+  { name = "unexercised", type = "u32" },
+  { name = "result", type = "UpgradeResult" },
+  { name = "claims", type = "list<string>" },
+]
+
+# ------------------------------------------------- Guard runtime (R15, additive)
+
+[enum.GuardMode]
+doc = "shadow: evaluate, record the would-result and forward the original request exactly once (never a claim of prevention); enforce: apply the outcome before dispatch."
+values = ["shadow", "enforce"]
+
+[enum.GuardOutcome]
+doc = "What the policy decided for one call. In shadow this is the would-result; a shadow hold is hypothetical and does not show that a real human would approve."
+values = ["allow", "deny", "hold"]
+
+[enum.FailAction]
+doc = "What a supported action does when evaluation cannot complete. fail_open forwards the call and is recorded as a bypass of protection; fail_closed refuses; hold parks the call for a human."
+values = ["fail_open", "fail_closed", "hold"]
+
+[enum.FailCause]
+doc = "Why evaluation could not complete: it exceeded its time bound, the policy or its evidence is past its expiry contract, an upstream dependency (provider, receipt lookup) is unreachable, or the decision ledger cannot accept a record. M5 (ADR-0041) adds: the store cannot be read or written (store_unavailable: unreachable or corrupt), the evaluator failed (evaluation_failed: it panicked), and the clock cannot be trusted (clock_untrusted: it went back past what the Guard already recorded)."
+values = ["evaluation_timeout", "stale_state", "upstream_outage", "ledger_full", "store_unavailable", "evaluation_failed", "clock_untrusted"]
+
+[enum.ApprovalState]
+doc = "pending: waiting for an authorized human; approved: usable once; denied, revoked and expired never dispatch; consumed: used by exactly one dispatch."
+values = ["pending", "approved", "denied", "consumed", "revoked", "expired"]
+
+[enum.LimitKind]
+doc = "spend: sum of an amount field per scope key; count: number of calls per scope key."
+values = ["spend", "count"]
+
+[enum.ReservationState]
+doc = "reserved: capacity held before dispatch; committed: the provider confirmed the effect; released: definitely no effect, capacity returned; unknown: outcome not established, capacity stays held until reconciliation."
+values = ["reserved", "committed", "released", "unknown"]
+
+[enum.BypassKind]
+doc = "Where protection did not apply: fail_open (a declared fail policy let the call through), unguarded_route (a route the bundle does not cover was forwarded in shadow), async_check (evaluation finished after dispatch; never prevention)."
+values = ["fail_open", "unguarded_route", "async_check"]
+
+[enum.RouteKind]
+values = ["rest", "mcp"]
+
+[enum.IntentState]
+doc = "Durable lifecycle of one logical action (architecture 19.2): received, reserved (dispatch intent published), dispatched (sent, outcome not yet recorded), confirmed, rejected_without_effect, outcome_unknown, reconciled, acknowledged (M3: the provider answered success but its own record does not yet show a final effect, so this is not a confirmed financial effect; confirmed follows only from a receipt lookup or a verified provider event when the operation declares a receipt)."
+values = ["received", "reserved", "dispatched", "confirmed", "rejected_without_effect", "outcome_unknown", "reconciled", "acknowledged"]
+
+[record.GuardRoute]
+doc = "Maps one route to a tool operation. rest: method and path; mcp: path is the MCP tool name."
+fields = [
+  { name = "kind", type = "RouteKind" },
+  { name = "method", type = "option<string>" },
+  { name = "path", type = "string" },
+  { name = "operation", type = "string" },
+]
+
+[record.FailPolicyEntry]
+doc = "The declared failure policy of one operation for one cause; operation * is the default. Consequential effects must not quietly fail open: a missing entry is fail_closed."
+fields = [
+  { name = "operation", type = "string" },
+  { name = "cause", type = "FailCause" },
+  { name = "action", type = "FailAction" },
+]
+
+[record.GuardLimit]
+doc = "A scoped limit enforced by atomic reservation in the Guard's durable store: per scope key (tenant, limit and the values of the scope argument fields), the sum of amount_field (spend) or the call count (count) may not exceed cap. coordination guard_store is supported; provider_state (the quantity also changes outside the Guard) is reported as an unsupported binding, never approximated."
+fields = [
+  { name = "id", type = "id" },
+  { name = "tool", type = "id" },
+  { name = "operation", type = "string" },
+  { name = "kind", type = "LimitKind" },
+  { name = "amount_field", type = "option<string>" },
+  { name = "scope", type = "list<string>" },
+  { name = "cap", type = "value" },
+  { name = "window_seconds", type = "option<u64>" },
+  { name = "coordination", type = "string" },
+  { name = "reviewed_by", type = "id" },
+]
+
+[record.GuardIntent]
+doc = "How the Guard identifies and reconciles one logical action of an operation (intent key fields, the provider's idempotency header, and a receipt lookup path template with {field} arguments). retry_safe is true only when the ToolContract makes a repeat safe (provider idempotency); an uncertain irreversible action is never repeated otherwise."
+fields = [
+  { name = "tool", type = "id" },
+  { name = "operation", type = "string" },
+  { name = "key_fields", type = "list<string>" },
+  { name = "idempotency_header", type = "option<string>" },
+  { name = "receipt_lookup", type = "option<string>" },
+  { name = "receipt_match_field", type = "option<string>" },
+  { name = "retry_safe", type = "bool" },
+  # M3 (ADR-0039): structured receipt lookup (supersedes receipt_lookup/receipt_match_field when
+  # present), the provider's declared minimum key retention, and whether the Guard derives the
+  # idempotency key from the intent id.
+  { name = "receipt", type = "option<ReceiptLookup>" },
+  { name = "key_lifetime_seconds", type = "option<u64>" },
+  { name = "derive_key", type = "option<bool>" },
+]
+
+[record.BundleRule]
+doc = "One reviewed rule in a policy bundle: the immutable RuleVersion, the activation state it was reviewed to, and its guard binding (supported or an explicit unsupported reason)."
+fields = [
+  { name = "rule", type = "RuleVersion" },
+  { name = "activation", type = "ActivationState" },
+  { name = "binding", type = "RuleBinding" },
+]
+
+[record.PolicyBundle]
+doc = "An immutable, content-addressed Guard policy: its digest is sha256 of its canonical bytes. Only rules reviewed to guard_shadow or production can be bundled; ceiling is the lowest activation state of any included rule, and a bundle whose ceiling is guard_shadow can only run shadow. valid_until_ms is the policy-expiry contract; a missing fail policy entry is fail_closed."
+fields = [
+  { name = "tenant", type = "id" },
+  { name = "name", type = "id" },
+  { name = "version", type = "u64" },
+  { name = "ceiling", type = "ActivationState" },
+  { name = "valid_until_ms", type = "option<u64>" },
+  { name = "eval_timeout_ms", type = "u64" },
+  { name = "approval_ttl_seconds", type = "u64" },
+  { name = "routes", type = "list<GuardRoute>" },
+  { name = "rules", type = "list<BundleRule>" },
+  { name = "limits", type = "list<GuardLimit>" },
+  { name = "intents", type = "list<GuardIntent>" },
+  { name = "fail_policy", type = "list<FailPolicyEntry>" },
+  { name = "unsupported", type = "list<string>" },
+  # M3 (ADR-0039): the digest of each operation's ToolContract the bundle was built from.
+  { name = "contract_pins", type = "option<map<digest>>" },
+  # M4 (ADR-0040): who owns this policy version and from when it may take effect.
+  { name = "owner", type = "option<id>" },
+  { name = "effective_from_ms", type = "option<u64>" },
+]
+
+[record.RuleEvaluation]
+doc = "One rule's result for one call: allow, deny, hold, not_applicable or unknown, with the rule version it ran."
+fields = [
+  { name = "rule", type = "id" },
+  { name = "rule_digest", type = "digest" },
+  { name = "decision", type = "string" },
+  { name = "reason", type = "string" },
+]
+
+[record.GuardDecision]
+doc = "One Guard decision about one call. principal comes from the agent credential, never the request; arguments is a redacted copy and call is the digest of the exact arguments. outcome is the policy result (the would-result in shadow); enforced says whether it was applied before dispatch; prevented is true only when enforce stopped a call that was not dispatched. An async or late evaluation is never prevention."
+fields = [
+  { name = "id", type = "id" },
+  { name = "context", type = "ExecutionContext" },
+  { name = "mode", type = "GuardMode" },
+  { name = "principal", type = "PrincipalContext" },
+  { name = "tool", type = "id" },
+  { name = "operation", type = "string" },
+  { name = "call", type = "digest" },
+  { name = "arguments", type = "map<value>" },
+  { name = "policy", type = "digest" },
+  { name = "policy_version", type = "u64" },
+  { name = "evaluations", type = "list<RuleEvaluation>" },
+  { name = "evidence_age_ms", type = "option<u64>" },
+  { name = "freshness_ms", type = "option<u64>" },
+  { name = "outcome", type = "GuardOutcome" },
+  { name = "enforced", type = "bool" },
+  { name = "dispatched", type = "bool" },
+  { name = "prevented", type = "bool" },
+  { name = "fail_cause", type = "option<FailCause>" },
+  { name = "fail_action", type = "option<FailAction>" },
+  { name = "approval", type = "option<id>" },
+  { name = "reservations", type = "list<id>" },
+  { name = "reasons", type = "list<string>" },
+  { name = "at_ms", type = "u64" },
+]
+
+[record.ApprovalRequest]
+doc = "A held call waiting for, or carrying, a human decision (Q58). Bound to the exact call digest, principal, tenant, operation and policy digest; expires; consumed at most once, with a fresh recheck at use. Notification delivery is not approval: only an authenticated approver changes state."
+fields = [
+  { name = "id", type = "id" },
+  { name = "tenant", type = "id" },
+  { name = "principal", type = "id" },
+  { name = "tool", type = "id" },
+  { name = "operation", type = "string" },
+  { name = "call", type = "digest" },
+  { name = "policy", type = "digest" },
+  { name = "state", type = "ApprovalState" },
+  { name = "requested_at_ms", type = "u64" },
+  { name = "expires_at_ms", type = "u64" },
+  { name = "approver", type = "option<id>" },
+  { name = "decided_at_ms", type = "option<u64>" },
+  { name = "consumed_by", type = "option<string>" },
+  { name = "summary", type = "string" },
+  # M4 (ADR-0040): what a reviewer is shown and who may decide: the rule that held the call and its
+  # version, the exact (redacted) arguments and amount, the policy version, the role the request is
+  # waiting for (the tip of its escalation chain) and when it was escalated.
+  { name = "rule", type = "option<id>" },
+  { name = "rule_digest", type = "option<digest>" },
+  { name = "arguments", type = "option<map<value>>" },
+  { name = "amount", type = "option<value>" },
+  { name = "policy_version", type = "option<u64>" },
+  { name = "role", type = "option<id>" },
+  { name = "escalated_ms", type = "option<u64>" },
+]
+
+[record.ApprovalConsumption]
+doc = "The single use of one approval: which decision consumed it, for which call, under which policy, and when."
+fields = [
+  { name = "approval", type = "id" },
+  { name = "decision", type = "id" },
+  { name = "call", type = "digest" },
+  { name = "policy", type = "digest" },
+  { name = "principal", type = "id" },
+  { name = "tenant", type = "id" },
+  { name = "at_ms", type = "u64" },
+]
+
+[record.Reservation]
+doc = "Capacity held before dispatch under one limit and scope key. Unknown outcomes keep their capacity until reconciliation."
+fields = [
+  { name = "id", type = "id" },
+  { name = "tenant", type = "id" },
+  { name = "limit", type = "id" },
+  { name = "key", type = "string" },
+  { name = "amount", type = "value" },
+  { name = "cap", type = "value" },
+  { name = "state", type = "ReservationState" },
+  { name = "decision", type = "id" },
+]
+
+[record.BypassRecord]
+doc = "A place where protection did not apply, recorded rather than hidden. recorded_in names where the record went: the decision ledger, or a fallback log when the ledger itself was the failure."
+fields = [
+  { name = "id", type = "id" },
+  { name = "decision", type = "option<id>" },
+  { name = "kind", type = "BypassKind" },
+  { name = "detail", type = "string" },
+  { name = "recorded_in", type = "string" },
+  { name = "at_ms", type = "u64" },
+]
+
+[record.IntentRecord]
+doc = "One logical action in the Guard's durable intent ledger. attempts counts dispatches; outcome_unknown is kept until the provider is asked (receipt lookup) or the call carries the provider's idempotency key; matching arguments alone never prove the same intent."
+fields = [
+  { name = "intent", type = "id" },
+  { name = "tenant", type = "id" },
+  { name = "tool", type = "id" },
+  { name = "operation", type = "string" },
+  { name = "call", type = "digest" },
+  { name = "state", type = "IntentState" },
+  { name = "attempts", type = "u32" },
+  { name = "decision", type = "id" },
+  { name = "provider_effect", type = "option<string>" },
+  { name = "detail", type = "string" },
+  # M3 (ADR-0039): what the provider's own record shows, how that was established, and the key.
+  { name = "effect", type = "option<EffectStatus>" },
+  { name = "confirmed_by", type = "option<string>" },
+  { name = "first_dispatch_ms", type = "option<u64>" },
+  { name = "idempotency_key", type = "option<string>" },
+  { name = "key_epoch", type = "option<u32>" },
+]
+
+# ---------------------------------------------------------------- R16 Prove
+# Additive: the sequenced evidence ledger, signed checkpoints, key log, anchors,
+# evidence packs and incident imports. The integrity claim is relative to a
+# trusted anchor; nothing here proves that what was recorded is true or complete.
+
+[enum.EvidenceKind]
+doc = "What an entry is. Kinds are never merged: observed_fact (something a component saw), guard_decision (what a policy decided, which is not an effect), approval (a human decision on one call), provider_receipt (the provider's own confirmation of an effect), inferred_explanation (a reasoned account that may be wrong), tombstone (a payload was deleted or redacted), gap (evidence known to be missing)."
+values = ["observed_fact", "guard_decision", "approval", "provider_receipt", "inferred_explanation", "tombstone", "gap"]
+
+[enum.IntegrityState]
+doc = "The verifier's verdict about a pack relative to a trusted anchor. verified_against_checkpoint: the chain up to the anchor matches the retained checkpoint; incomplete: parts are known to be missing (a lost segment or tail; the entries that remain are still checked); unverifiable: no trusted anchor covers the history, so nothing is claimed; invalid: an edit, reorder, deletion, truncation, rewrite, wrong key or revoked key was detected."
+values = ["verified_against_checkpoint", "incomplete", "unverifiable", "invalid"]
+
+[enum.KeyEventKind]
+doc = "genesis: the first signing key (self-signed); rotate: a new key added, signed by the outgoing and the new key; revoke: a key no longer trusted (compromised makes every checkpoint it signed untrusted unless a retained anchor pins it); recover: a new key after the previous one was lost, signed only by itself, so trust in it comes from an anchor; profile (C4): the signature profile required from this key-log position on, signed under both the profile in force and the new one."
+values = ["genesis", "rotate", "revoke", "recover", "profile"]
+
+[enum.PayloadState]
+doc = "present: the authorized payload is retained; redacted: only a redacted view remains; deleted: nothing remains but its commitment. The commitment stays either way and replay claims that needed the payload shrink."
+values = ["present", "redacted", "deleted"]
+
+[enum.DispatchState]
+doc = "not_dispatched: the request was held or blocked before it was sent (a decision, not an effect); dispatched: sent to the provider; not_observed: no dispatch record."
+values = ["not_dispatched", "dispatched", "not_observed"]
+
+[enum.EffectState]
+doc = "not_executed: never sent, so no effect; confirmed: a provider receipt is recorded; receipt_missing: sent, no provider receipt recorded; rejected: the provider refused; unknown: the outcome was not established."
+values = ["not_executed", "confirmed", "receipt_missing", "rejected", "unknown"]
+
+[enum.IncidentClass]
+doc = "How faithfully an incident can be run again. reenactment: the recorded call and its prerequisites are all present and are run against tool doubles; simulation: a reconstruction with declared substitutes for missing state (also any held or blocked request, which needs a counterfactual); property_replay: only the rule and a violating shape are known; blocked_reconstruction: a needed input is missing and nothing is substituted."
+values = ["reenactment", "simulation", "property_replay", "blocked_reconstruction"]
+
+[record.PayloadCommitment]
+doc = "The salted digest of a retained payload, sha256(salt || bytes), and its size. The salt is stored with the payload and destroyed with it, so a deleted low-entropy payload cannot be recovered by guessing against the digest."
+fields = [
+  { name = "digest", type = "digest" },
+  { name = "size", type = "u64" },
+]
+
+[record.EvidenceLink]
+doc = "A citation of one ledger entry: which ledger, tenant, sequence and entry hash. Links are how the steps of an incident refer to each other and to the Guard evidence they came from."
+fields = [
+  { name = "rel", type = "string" },
+  { name = "ledger", type = "string" },
+  { name = "tenant", type = "id" },
+  { name = "seq", type = "u64" },
+  { name = "hash", type = "digest" },
+]
+
+[record.LedgerEntry]
+doc = "One append-only, per-tenant sequenced record. hash is sha256 of 'geo-ledger/1' and the canonical bytes with hash replaced by 64 zero hex digits; prev is the previous entry's hash (absent for sequence 1). body is the canonical JSON of the record named by body_type. subject groups the entries of one action. Authorized replay payloads are stored apart and only their salted commitment is in the entry."
+fields = [
+  { name = "v", type = "u32" },
+  { name = "tenant", type = "id" },
+  { name = "seq", type = "u64" },
+  { name = "prev", type = "option<digest>" },
+  { name = "kind", type = "EvidenceKind" },
+  { name = "subject", type = "string" },
+  { name = "at_ms", type = "u64" },
+  { name = "body_type", type = "string" },
+  { name = "body", type = "string" },
+  { name = "payload", type = "option<PayloadCommitment>" },
+  { name = "links", type = "list<EvidenceLink>" },
+  { name = "hash", type = "digest" },
+]
+
+[record.Checkpoint]
+doc = "A signed statement that the tenant's chain had count entries and head hash at seq when the key log had key_log_seq events. Version 1 (classical): sig is the hex ed25519 signature over 'geo-checkpoint/1' and the canonical bytes with sig empty; profile and sigs are absent. Version 2 (C4): sig is empty, profile names the signature profile the key log required at key_log_seq, and sigs holds one SuiteSignature per required suite over the SuiteSignatureInput of record_type geo.checkpoint/2 and the sha256 of 'geo-checkpoint/2' and the canonical bytes with sig empty and sigs absent. A checkpoint kept only beside the ledger detects nothing against someone who controls the store: only a copy kept elsewhere (an anchor) does."
+fields = [
+  { name = "v", type = "u32" },
+  { name = "tenant", type = "id" },
+  { name = "seq", type = "u64" },
+  { name = "head", type = "digest" },
+  { name = "count", type = "u64" },
+  { name = "key", type = "id" },
+  { name = "key_log_seq", type = "u64" },
+  { name = "at_ms", type = "u64" },
+  { name = "sig", type = "string" },
+  { name = "profile", type = "option<id>" },
+  { name = "sigs", type = "option<list<SuiteSignature>>" },
+]
+
+[record.KeySig]
+doc = "One signature on a key event: the key that signed and its hex signature. An ed25519 key signs 'geo-keyevent/1' and the canonical bytes with sigs empty and hash zero; a key of another suite (C4) signs the SuiteSignatureInput of record_type geo.key-event/1 and the event's hash, under its registered suite."
+fields = [
+  { name = "key", type = "id" },
+  { name = "sig", type = "string" },
+]
+
+[record.KeyEvent]
+doc = "One event of the hash-linked key log: genesis, rotate, revoke, recover or profile. key is the key the event is about (its id is the sha256 of its public key; for a profile event, the key that asked for it); public_key is present when a key is introduced, as hex; suite (C4) names the signature suite of an introduced key, absent meaning geo-ed25519/1; target names the revoked key; profile names the profile a profile event requires from its position on. Revocation counts from key_log position: checkpoints signed under a later key-log length are invalid, and compromised also distrusts earlier ones."
+fields = [
+  { name = "v", type = "u32" },
+  { name = "seq", type = "u64" },
+  { name = "prev", type = "option<digest>" },
+  { name = "kind", type = "KeyEventKind" },
+  { name = "key", type = "id" },
+  { name = "public_key", type = "option<string>" },
+  { name = "target", type = "option<id>" },
+  { name = "compromised", type = "bool" },
+  { name = "at_ms", type = "u64" },
+  { name = "note", type = "string" },
+  { name = "sigs", type = "list<KeySig>" },
+  { name = "hash", type = "digest" },
+  { name = "suite", type = "option<id>" },
+  { name = "profile", type = "option<id>" },
+]
+
+[record.Anchor]
+doc = "A checkpoint plus the signer's public key and the key log head, exported as a file the person keeps somewhere the store's owner cannot rewrite. Verification is relative to it: it does not prove the recorded facts true or complete. For a version 2 checkpoint (C4), keys holds the public key of every signer under its suite, public_key repeats the first of them, and key_log_head is required."
+fields = [
+  { name = "v", type = "u32" },
+  { name = "checkpoint", type = "Checkpoint" },
+  { name = "public_key", type = "string" },
+  { name = "key_log_head", type = "option<digest>" },
+  { name = "note", type = "string" },
+  { name = "keys", type = "option<list<AnchorKey>>" },
+]
+
+[record.EvidenceGap]
+doc = "Evidence known to be missing, kept visible: a lost storage segment, a storage tail older checkpoints prove existed, a payload that is unavailable, a receipt that never arrived."
+fields = [
+  { name = "kind", type = "string" },
+  { name = "from_seq", type = "u64" },
+  { name = "to_seq", type = "option<u64>" },
+  { name = "detail", type = "string" },
+]
+
+[record.ActionEvidence]
+doc = "One action seen through its evidence, decision, dispatch and confirmed effect kept apart. A held or blocked request is not_dispatched and not_executed, never an effect."
+fields = [
+  { name = "subject", type = "string" },
+  { name = "decision_seq", type = "option<u64>" },
+  { name = "outcome", type = "option<GuardOutcome>" },
+  { name = "mode", type = "option<GuardMode>" },
+  { name = "dispatch", type = "DispatchState" },
+  { name = "effect", type = "EffectState" },
+  { name = "seqs", type = "list<u64>" },
+  { name = "notes", type = "list<string>" },
+]
+
+[record.CoverageView]
+doc = "What the evidence does not show: rules that were in scope and never evaluated (unexercised), rules that only watch (monitor_only, so they stopped nothing), scope the Guard cannot cover (unsupported), dispatched actions with no provider receipt, and payloads that are no longer available."
+fields = [
+  { name = "evaluated_rules", type = "list<string>" },
+  { name = "unexercised_rules", type = "list<string>" },
+  { name = "monitor_only_rules", type = "list<string>" },
+  { name = "unsupported", type = "list<string>" },
+  { name = "missing_receipts", type = "list<string>" },
+  { name = "unavailable_payloads", type = "list<string>" },
+  { name = "notes", type = "list<string>" },
+]
+
+[record.EvidencePack]
+doc = "An exported view of one tenant's entries from from_seq to to_seq, with the checkpoints and key log needed to check them, the gaps and the derived per-action and coverage views. base_prev is the hash before from_seq. The views are derived, not sources of truth: an independent verifier checks entries, checkpoints and keys against a trusted anchor and ignores them."
+fields = [
+  { name = "format", type = "string" },
+  { name = "v", type = "u32" },
+  { name = "tenant", type = "id" },
+  { name = "ledger", type = "string" },
+  { name = "generated_ms", type = "u64" },
+  { name = "from_seq", type = "u64" },
+  { name = "to_seq", type = "u64" },
+  { name = "base_prev", type = "option<digest>" },
+  { name = "entries", type = "list<LedgerEntry>" },
+  { name = "checkpoints", type = "list<Checkpoint>" },
+  { name = "key_log", type = "list<KeyEvent>" },
+  { name = "gaps", type = "list<EvidenceGap>" },
+  { name = "actions", type = "list<ActionEvidence>" },
+  { name = "coverage", type = "CoverageView" },
+  { name = "notes", type = "list<string>" },
+]
+
+[record.IncidentImport]
+doc = "A Guard incident imported into an isolated case that uses tool doubles only. source cites the Guard evidence; classification says how faithfully it can be run again; missing lists inputs that were not available (never substituted silently); redactions lists what was removed; refused_endpoints lists live endpoints that were refused; history (M6) cites the earlier calls of the same action imported for a rule that depends on them (an at-most-once rule), absent when the rule needs only the one call; case, finding and regression fill in as the developer moves through the steps. Nothing is promoted or resent automatically."
+fields = [
+  { name = "id", type = "id" },
+  { name = "tenant", type = "id" },
+  { name = "source", type = "EvidenceLink" },
+  { name = "decision", type = "id" },
+  { name = "rule", type = "option<id>" },
+  { name = "rule_digest", type = "option<digest>" },
+  { name = "classification", type = "IncidentClass" },
+  { name = "prerequisites", type = "list<string>" },
+  { name = "missing", type = "list<string>" },
+  { name = "redactions", type = "list<string>" },
+  { name = "refused_endpoints", type = "list<string>" },
+  { name = "history", type = "option<list<EvidenceLink>>" },
+  { name = "case", type = "option<id>" },
+  { name = "finding", type = "option<id>" },
+  { name = "regression", type = "option<id>" },
+  { name = "created_ms", type = "u64" },
+]
+
+# ------------------------------------------- Guard provider-qualified controls (M3, additive)
+# ADR-0039, Explanation section 39. A versioned receipt-lookup declaration (ToolContract.receipt,
+# GuardIntent.receipt) and tool-definition pins. Every field added to an existing record above is
+# option<>: absent options are omitted from canonical bytes, so existing bundles, stores and
+# digests are unchanged.
+
+[record.ReceiptLookup]
+doc = "How the provider's own record of one effect is found and read (v is 1). by_identity is a path template ({arg} from the call's arguments) that lists candidate records; identity_field is the dotted path in each record (for example metadata.refund_request) whose value must equal the call's identity_arg. by_id is a path template with {effect} for the provider's id of the record. status_field names the record's status; confirmed, pending and failed list the values that mean a final effect, an accepted but not yet final one, and a final absence of effect. ambiguous lists replies (STATUS or STATUS:error-type) that do not establish whether an earlier attempt took effect. page_cursor names the query parameter that continues a list whose has_more is true. A 2xx reply is an acknowledgement; only a lookup or a verified provider event confirms."
+fields = [
+  { name = "v", type = "u32" },
+  { name = "by_identity", type = "string" },
+  { name = "by_id", type = "option<string>" },
+  { name = "identity_field", type = "string" },
+  { name = "identity_arg", type = "string" },
+  { name = "status_field", type = "option<string>" },
+  { name = "confirmed", type = "list<string>" },
+  { name = "pending", type = "list<string>" },
+  { name = "failed", type = "list<string>" },
+  { name = "ambiguous", type = "list<string>" },
+  { name = "page_cursor", type = "option<string>" },
+]
+
+[enum.ToolPinState]
+doc = "unreviewed: first seen and recorded, nobody has reviewed it (trust on first use, said so); reviewed: a person accepted this exact definition; changed: the definition differs from the pinned one and calls are held until a person reviews the change; rejected: a person refused the changed definition and calls stay refused."
+values = ["unreviewed", "reviewed", "changed", "rejected"]
+
+[record.ToolPin]
+doc = "The pinned definition of one tool (MintMCP-style tool-change policy). source is mcp_tools_list (digest of the tool's name, description and schemas as the MCP server listed them) or tool_contract (digest of the ToolContract a policy bundle was built from). digest is the accepted (or first seen) definition; pending is a changed one waiting for review. A changed definition holds that tool's calls until a person reviews it."
+fields = [
+  { name = "tool", type = "id" },
+  { name = "name", type = "string" },
+  { name = "source", type = "string" },
+  { name = "digest", type = "digest" },
+  { name = "state", type = "ToolPinState" },
+  { name = "pending", type = "option<digest>" },
+  { name = "first_seen_ms", type = "u64" },
+  { name = "changed_ms", type = "option<u64>" },
+  { name = "reviewed_by", type = "option<id>" },
+  { name = "reviewed_ms", type = "option<u64>" },
+  { name = "summary", type = "string" },
+]
+
+# --------------------------------------------- Guard review and policy lifecycle (M4, additive)
+# ADR-0040, Explanation section 40. An approver directory with scoped roles, per-agent credentials,
+# time-bounded policy exceptions and separately recorded lifecycle decisions. Fields added to
+# existing records above are option<>.
+
+[record.ApproverRole]
+doc = "What the holders of a role may approve. tools, operations, rules and tenants list what is covered; \"*\" covers any, an empty list covers nothing (there is no implicit 'any'). max_amount is the highest amount the role may approve, in the rule's own units (amount_unit says which, for example usd_cents); absent means no ceiling, which must be written explicitly by whoever creates the role. After escalate_after_seconds a pending request it is assigned to escalates to escalates_to, whose holders may then act as well; escalation never widens what a role covers."
+fields = [
+  { name = "id", type = "id" },
+  { name = "tools", type = "list<string>" },
+  { name = "operations", type = "list<string>" },
+  { name = "rules", type = "list<string>" },
+  { name = "tenants", type = "list<string>" },
+  { name = "max_amount", type = "option<value>" },
+  { name = "amount_unit", type = "option<string>" },
+  { name = "escalate_after_seconds", type = "option<u64>" },
+  { name = "escalates_to", type = "option<id>" },
+]
+
+[record.Approver]
+doc = "A person in the Guard's approver directory, with the roles they hold. An admin credential alone never approves: approving needs an approver credential whose holder has a role covering the call. A disabled approver's past approvals are not used."
+fields = [
+  { name = "id", type = "id" },
+  { name = "roles", type = "list<id>" },
+  { name = "created_ms", type = "u64" },
+  { name = "created_by", type = "id" },
+  { name = "disabled_ms", type = "option<u64>" },
+  { name = "note", type = "string" },
+]
+
+[enum.CredentialKind]
+doc = "Whose credential it is: an agent (calls tools), an admin (operates the Guard) or an approver (decides held calls and grants exceptions)."
+values = ["agent", "admin", "approver"]
+
+[record.GuardCredential]
+doc = "One credential issued by the Guard (its token is shown once and stored only as a hash). subject is the agent, admin or approver id. It works from issued_ms until expires_ms (absent: until revoked) and never after revoked_ms. Several credentials of one subject may be valid at once, so a credential is rotated without downtime."
+fields = [
+  { name = "id", type = "id" },
+  { name = "kind", type = "CredentialKind" },
+  { name = "subject", type = "id" },
+  { name = "issued_ms", type = "u64" },
+  { name = "expires_ms", type = "option<u64>" },
+  { name = "revoked_ms", type = "option<u64>" },
+  { name = "issued_by", type = "id" },
+  { name = "note", type = "string" },
+]
+
+[record.PolicyException]
+doc = "A time-bounded, authorized exception to one per-call rule (an argument allowlist or a call-bound approval) for calls whose arguments equal every entry of matches (never empty), optionally only for one agent and up to max_amount. It is bound to the rule's exact digest, valid from from_ms until until_ms, granted by an approver whose role covers the rule, and revocable. It never waives at-most-once intents, limits, tool-change holds, kill switches, unlisted-tool refusals or fail policies. Explore does not see exceptions."
+fields = [
+  { name = "id", type = "id" },
+  { name = "tenant", type = "id" },
+  { name = "rule", type = "id" },
+  { name = "rule_digest", type = "digest" },
+  { name = "matches", type = "map<value>" },
+  { name = "agent", type = "option<id>" },
+  { name = "max_amount", type = "option<value>" },
+  { name = "from_ms", type = "u64" },
+  { name = "until_ms", type = "u64" },
+  { name = "approver", type = "id" },
+  { name = "reason", type = "string" },
+  { name = "revoked_ms", type = "option<u64>" },
+  { name = "revoked_by", type = "option<id>" },
+]
+
+[enum.LifecycleKind]
+doc = "The separately recorded decisions of a rule's life (plan section 2 and 9.3): proposing a rule, accepting its meaning, activating it as a CI check, deploying it as a production Guard binding, and publishing an assessment."
+values = ["propose_rule", "accept_meaning", "activate_ci", "deploy_production", "publish_assessment"]
+
+[record.LifecycleDecision]
+doc = "One recorded lifecycle decision: who made it (actor; automated proposers are named as such), about what (subject, and the rule's exact digest when it is about a rule), with the exact inputs (arguments), the evidence it relied on with its age (absent: unknown, never zero), and when it lapses (expires_ms, absent when it does not)."
+fields = [
+  { name = "id", type = "id" },
+  { name = "kind", type = "LifecycleKind" },
+  { name = "actor", type = "id" },
+  { name = "subject", type = "string" },
+  { name = "rule_digest", type = "option<digest>" },
+  { name = "arguments", type = "map<value>" },
+  { name = "evidence", type = "list<string>" },
+  { name = "evidence_age_ms", type = "option<u64>" },
+  { name = "expires_ms", type = "option<u64>" },
+  { name = "at_ms", type = "u64" },
+  { name = "note", type = "string" },
+]
+# ------------------------------------------- C1 assessment certificates (additive)
+# Plan section 10.1, ADR-0036. A SystemAssessment is a statement about one
+# declared subject (a repository revision or a build, its configuration,
+# dependencies, models and control boundary) under declared rules and a
+# declared method. It is separate from evidence packs (raw, sequenced
+# evidence; R16) and from runtime approval (Guard decisions and approvals;
+# R15): it cites them by digest and never replaces them.
+#
+# Identity: id = "assessment:" + hex sha256("geo-assessment/1\n" || canonical
+# bytes of the AssessmentManifest). Signatures sit outside the manifest, so
+# adding a signature (for example a post-quantum suite, C4) never changes the
+# id; what a verifier must require (the policy and suites) sits inside it, so
+# it cannot be swapped or stripped without changing the id.
+#
+# Three axes are kept apart and are never merged into one badge:
+#   AssessmentOutcome        what the stated method found, per rule (in the manifest)
+#   AssessmentIntegrity      authenticity of the bytes (judged by a verifier, never self-asserted)
+#   AssessmentApplicability  whether it still applies to the selected subject (judged from status records and expiry)
+# Validation lives in crates/geo-contracts/src/assessment.rs; TypeScript and
+# Python compute the id and refuse unknown schema versions.
+
+[enum.AssessmentSchema]
+doc = "Schema version of an assessment manifest. A reader refuses any value it does not know (unsupported_schema_version) before reading other fields, and never reads a newer manifest best-effort. Version 1 is the first: nothing migrates into it."
+values = ["geo_assessment_v1"]
+
+[enum.AssessmentArtifactKind]
+doc = "What the artifact is. assessment: an issued assessment of a real run; redacted_derivative: a separately identified copy with fields removed for publication, linked to its original by derived_from (the original's signed bytes are never altered); example: an illustrative document that is not an assessment of anything and must be shown as an example."
+values = ["assessment", "redacted_derivative", "example"]
+
+[enum.AssessmentOutcome]
+doc = "The result of the stated method for one rule (assessment axis). violation_found: a witness broke the rule; no_violation_observed_within_scope: nothing broke it within the stated method, budget and subject (not a proof, not complete coverage); unknown_or_incomplete: evidence was missing or incomplete, so nothing is claimed; not_exercised: the method never reached the rule's condition; proved_for_declared_model: a formal model check of a declared model showed it holds for that model only, never for the running system, and only a formal_model_check method may produce it (bounded testing never does)."
+values = ["violation_found", "no_violation_observed_within_scope", "unknown_or_incomplete", "not_exercised", "proved_for_declared_model"]
+
+[enum.AssessmentIntegrity]
+doc = "Authenticity and integrity of an assessment's bytes (integrity axis), judged by a verifier and never asserted by the manifest. verified_against_trusted_inputs: the id and the signatures the policy requires check against keys and anchors the reader trusts; unsigned: no signature, so authorship is not shown; unverifiable: signatures exist but no trusted key, anchor or supported suite is available; invalid: the id, a signature or a required digest does not match, or a key was revoked before signing."
+values = ["verified_against_trusted_inputs", "unsigned", "unverifiable", "invalid"]
+
+[enum.AssessmentApplicability]
+doc = "Whether the assessment still applies to the selected subject (applicability axis), judged from status records and the claim's expiry. current_for_declared_subject: no newer status says otherwise as of the status snapshot used; superseded: a newer assessment replaces it; invalidated: a change named by an invalidation trigger (subject, rule, configuration, policy) made it stale, without rewriting its results; withdrawn: the issuer no longer stands behind the claim (distinct from key revocation, which is integrity, and from expiry); expired: past the claim's expiry; status_unknown: no recent trusted status is available, so current non-withdrawal is not claimed."
+values = ["current_for_declared_subject", "superseded", "invalidated", "withdrawn", "expired", "status_unknown"]
+
+[enum.AssessmentMethodKind]
+doc = "How a method produced its results. bounded_exploration: Explore within budgets (an exhaustive strategy is still bounded by depth and budget); recorded_replay: replay of recorded trials; fix_verification: replay plus neighbourhood on a new revision; runtime_evidence: Guard decisions and Prove ledger evidence over a period; formal_model_check: a checker run over a declared model (the only kind that may produce proved_for_declared_model, and only for that model)."
+values = ["bounded_exploration", "recorded_replay", "fix_verification", "runtime_evidence", "formal_model_check"]
+
+[enum.AssessmentModelPrecision]
+doc = "How precisely a model's identity is known. weights_digest: the digest of local weights (verifiable); provider_revision: a revision the provider reports (not independently verifiable); mutable_alias: a name the provider may repoint; stand_in: a scripted or recorded double, not the real model; unknown: not established."
+values = ["weights_digest", "provider_revision", "mutable_alias", "stand_in", "unknown"]
+
+[enum.AssessmentEvidenceRole]
+doc = "What a cited evidence item is: a trial record, finding, portable replay, shrink report, fix verification, evidence pack, ledger entry, signed checkpoint, anchor (a checkpoint kept where the store's owner cannot rewrite it), coverage view, rule source, configuration file, qualification run, log or other."
+values = ["trial_record", "finding", "portable_replay", "shrink_report", "fix_verification", "evidence_pack", "ledger_entry", "checkpoint", "anchor", "coverage", "rule_source", "configuration", "qualification_run", "log", "other"]
+
+[enum.AssessmentEvidencePrivacy]
+doc = "Who may see an evidence item's payload. public: may travel with a published assessment; private: stays with the issuer or customer and needs an authorized export. A private item is still cited by digest."
+values = ["public", "private"]
+
+[enum.AssessmentClaimKind]
+doc = "What kind of statement the claim makes. bounded_assessment: results of bounded exploration or replay within the stated scope; runtime_evidence_review: what retained runtime evidence shows over a period; fix_verification: whether a retained finding still reproduces on a new revision; formal_model_result: a formal model check result, valid for the declared model only (needs a formal_model_check method with a declared model and a proved finding)."
+values = ["bounded_assessment", "runtime_evidence_review", "fix_verification", "formal_model_result"]
+
+[enum.AssessmentReview]
+doc = "Review and independence of the claim. unreviewed: nobody reviewed it; issuer_reviewed: the issuer's own people reviewed it (tests and verifiers written by the implementer are not independent evidence); independent_review: a named party outside the issuer reviewed it."
+values = ["unreviewed", "issuer_reviewed", "independent_review"]
+
+[enum.AssessmentInvalidation]
+doc = "A change that makes a claim stale for its subject: the subject revision or build, a rule meaning, a configuration input, the environment, a dependency, a model, the verification or deployment policy, an authorized exception, or deletion of required evidence. Key revocation is not here: it is an integrity matter in the key log."
+values = ["subject_changed", "rule_changed", "config_changed", "environment_changed", "dependency_changed", "model_changed", "policy_changed", "exception_changed", "evidence_deleted"]
+
+[record.AssessmentIssuer]
+doc = "Who issued the assessment: a stable issuer id, a readable name, the key identities expected to sign it (key:<sha256 of the public key>, as in the key log) and the generator that assembled it (name and version). Listing a key here does not make it trusted: trust comes from the reader's policy."
+fields = [
+  { name = "id", type = "id" },
+  { name = "name", type = "string" },
+  { name = "keys", type = "list<id>" },
+  { name = "generator", type = "string" },
+]
+
+[record.AssessmentModel]
+doc = "A model the subject used: the existing ModelPin (binding, provider model identifier, revision when exposed, tape when replaying) and how precisely its identity is known. A stand-in is labelled stand_in, never as the real model."
+fields = [
+  { name = "pin", type = "ModelPin" },
+  { name = "precision", type = "AssessmentModelPrecision" },
+  { name = "note", type = "string" },
+]
+
+[record.AssessmentControlBoundary]
+doc = "The declared control boundary: a readable statement, what passes through Geometer's control or observation (covered, for example tool gateways) and what is outside it (outside, for example a provider's own retries or a tool not routed through a gateway). Nothing outside is assessed."
+fields = [
+  { name = "statement", type = "string" },
+  { name = "covered", type = "list<string>" },
+  { name = "outside", type = "list<string>" },
+]
+
+[record.AssessmentSubject]
+doc = "What was assessed. revision is the existing ProjectRevision (content digest over relevant inputs, VCS ref as provenance only); build is a build or image digest; at least one of them is required. environment is the EnvironmentSpec digest; config maps each relevant configuration input (path or name) to its digest; dependencies maps each other pinned dependency to its digest; models lists the models with their identity precision; boundary is the declared control boundary."
+fields = [
+  { name = "name", type = "string" },
+  { name = "revision", type = "option<ProjectRevision>" },
+  { name = "build", type = "option<digest>" },
+  { name = "environment", type = "option<digest>" },
+  { name = "config", type = "map<digest>" },
+  { name = "dependencies", type = "map<digest>" },
+  { name = "models", type = "list<AssessmentModel>" },
+  { name = "boundary", type = "AssessmentControlBoundary" },
+]
+
+[record.AssessmentException]
+doc = "An authorized exception to a rule: its id, the scope it covers, why, who authorized it and when it expires (absent: no expiry declared). An exception narrows what a finding covers; it never turns a violation into a pass."
+fields = [
+  { name = "id", type = "id" },
+  { name = "scope", type = "string" },
+  { name = "reason", type = "string" },
+  { name = "authorized_by", type = "id" },
+  { name = "expires_ms", type = "option<u64>" },
+]
+
+[record.AssessmentRule]
+doc = "One rule in scope. rule is the existing immutable RuleVersion (id, typed meaning with units and unless conditions, semantic digest, intent level, provenance); its digest must match its meaning. version is the owner's readable version label (the digest identifies the version). statement is the constraint in plain words; preconditions are readable conditions under which it applies. required: the conservative summary depends on it. owner is who answers for the rule's meaning. bindings are the existing RuleBindings for explore (exploration), guard (enforcement) and prove (evidence), each supported or unsupported with a reason. reviews are the existing Reviews of this exact digest; exceptions are authorized exceptions."
+fields = [
+  { name = "rule", type = "RuleVersion" },
+  { name = "version", type = "string" },
+  { name = "statement", type = "string" },
+  { name = "preconditions", type = "list<string>" },
+  { name = "required", type = "bool" },
+  { name = "owner", type = "string" },
+  { name = "bindings", type = "list<RuleBinding>" },
+  { name = "reviews", type = "list<Review>" },
+  { name = "exceptions", type = "list<AssessmentException>" },
+]
+
+[record.AssessmentDeclaredModel]
+doc = "The formal model a formal_model_check method checked: its name, the digest of the model source, the checker (name and version) and the assumptions under which the model stands for the system. A proof holds for this model, not for the running system."
+fields = [
+  { name = "name", type = "string" },
+  { name = "digest", type = "digest" },
+  { name = "checker", type = "string" },
+  { name = "assumptions", type = "list<string>" },
+]
+
+[record.AssessmentMethod]
+doc = "How results were produced. id is cited by findings; kind says what kind of method it was; version is the method's (Geometer's) version and verifier the rule evaluator or checker version. strategy is the existing SearchStrategy when it searched; inputs maps test and configuration inputs to digests; seeds are the seeds used; budget is the existing SearchBudget (required for bounded_exploration) and reach the existing SearchReach it achieved (counts, never a percentage of possible behaviour). sampling says how samples were drawn; conditions are observed conditions (for example tool fidelity, container runtime); termination says why it stopped; unexercised_paths and unexercised_rules say what it never reached. model is the declared model of a formal_model_check (absent for every other kind)."
+fields = [
+  { name = "id", type = "id" },
+  { name = "kind", type = "AssessmentMethodKind" },
+  { name = "version", type = "string" },
+  { name = "verifier", type = "string" },
+  { name = "strategy", type = "option<SearchStrategy>" },
+  { name = "inputs", type = "map<digest>" },
+  { name = "seeds", type = "list<u64>" },
+  { name = "budget", type = "option<SearchBudget>" },
+  { name = "reach", type = "option<SearchReach>" },
+  { name = "sampling", type = "string" },
+  { name = "conditions", type = "list<string>" },
+  { name = "termination", type = "list<string>" },
+  { name = "unexercised_paths", type = "list<string>" },
+  { name = "unexercised_rules", type = "list<id>" },
+  { name = "model", type = "option<AssessmentDeclaredModel>" },
+]
+
+[record.AssessmentAction]
+doc = "One action behind a finding, with the attempt and its effect kept apart: what was attempted (description, attempt and intent ids when known), whether it was dispatched (existing DispatchState) and what the provider confirmed (existing EffectState). A held or blocked request is not_dispatched and not_executed, never an effect; a dispatched call is not a confirmed effect without a receipt. evidence cites manifest evidence item ids."
+fields = [
+  { name = "description", type = "string" },
+  { name = "attempt", type = "option<id>" },
+  { name = "intent", type = "option<id>" },
+  { name = "dispatch", type = "DispatchState" },
+  { name = "effect", type = "EffectState" },
+  { name = "evidence", type = "list<id>" },
+]
+
+[record.AssessmentFinding]
+doc = "The result for one rule (exactly one finding per declared rule). rule and rule_digest pin the rule version; method cites the method that produced it; outcome is the assessment axis; statement says it in plain words. witnesses are trial or finding ids; evidence cites manifest evidence item ids. unknowns, exclusions and assumptions are the result's limits, kept with it. fidelity is the weakest existing Fidelity behind it (simulated: Geometer-controlled doubles); replay is the existing ReproductionState a repetition showed; incident is the existing IncidentClass when it came from a runtime incident. actions keep attempted actions apart from confirmed effects."
+fields = [
+  { name = "rule", type = "id" },
+  { name = "rule_digest", type = "digest" },
+  { name = "method", type = "id" },
+  { name = "outcome", type = "AssessmentOutcome" },
+  { name = "statement", type = "string" },
+  { name = "witnesses", type = "list<id>" },
+  { name = "evidence", type = "list<id>" },
+  { name = "unknowns", type = "list<string>" },
+  { name = "exclusions", type = "list<string>" },
+  { name = "assumptions", type = "list<string>" },
+  { name = "fidelity", type = "Fidelity" },
+  { name = "replay", type = "ReproductionState" },
+  { name = "incident", type = "option<IncidentClass>" },
+  { name = "actions", type = "list<AssessmentAction>" },
+]
+
+[record.AssessmentEvidenceItem]
+doc = "One cited evidence item. id is what findings, actions and the claim cite; role says what it is; digest is the sha256 of its bytes and size their length. required: a finding or the claim depends on it (a required item whose payload is deleted makes the summary no better than unknown_or_incomplete); optional items are context. privacy says who may see the payload; payload is the existing PayloadState (present, redacted, deleted: the digest stays either way); redactions say what was removed. location is where the issuer keeps it (a hint, never trusted); ledger is the existing EvidenceLink when it is a ledger entry, checkpoint or anchor."
+fields = [
+  { name = "id", type = "id" },
+  { name = "role", type = "AssessmentEvidenceRole" },
+  { name = "digest", type = "digest" },
+  { name = "size", type = "option<u64>" },
+  { name = "required", type = "bool" },
+  { name = "privacy", type = "AssessmentEvidencePrivacy" },
+  { name = "payload", type = "PayloadState" },
+  { name = "redactions", type = "list<string>" },
+  { name = "location", type = "option<string>" },
+  { name = "ledger", type = "option<EvidenceLink>" },
+  { name = "note", type = "string" },
+]
+
+[record.AssessmentClaim]
+doc = "The issuer's claim. kind and statement say what is claimed; review is who reviewed it and reviewers names them; conditions are the applicability conditions; expires_ms is the expiry when one is defined (absent: none declared, which is not a promise of permanence); dependencies cite manifest evidence item ids or other assessment ids the claim rests on; invalidation lists the changes that make it stale."
+fields = [
+  { name = "kind", type = "AssessmentClaimKind" },
+  { name = "statement", type = "string" },
+  { name = "review", type = "AssessmentReview" },
+  { name = "reviewers", type = "list<string>" },
+  { name = "conditions", type = "list<string>" },
+  { name = "expires_ms", type = "option<u64>" },
+  { name = "dependencies", type = "list<id>" },
+  { name = "invalidation", type = "list<AssessmentInvalidation>" },
+]
+
+[record.AssessmentSummary]
+doc = "The conservative overall result, recomputed by every validator and refused when it differs. outcome is violation_found when any rule's finding found a violation; otherwise unknown_or_incomplete when there is no required rule, a required rule is unknown or not exercised, or a required evidence item is deleted; otherwise proved_for_declared_model only when every required rule was proved; otherwise no_violation_observed_within_scope. It is never not_exercised. The lists name the rules per outcome (manifest order); incomplete_required names required rules that are unknown or not exercised and missing_evidence names required evidence items whose payload is deleted, so limits stay visible even when a violation was found."
+fields = [
+  { name = "outcome", type = "AssessmentOutcome" },
+  { name = "violation_found", type = "list<id>" },
+  { name = "no_violation_observed", type = "list<id>" },
+  { name = "unknown_or_incomplete", type = "list<id>" },
+  { name = "not_exercised", type = "list<id>" },
+  { name = "proved", type = "list<id>" },
+  { name = "incomplete_required", type = "list<id>" },
+  { name = "missing_evidence", type = "list<id>" },
+]
+
+[record.AssessmentVerificationRef]
+doc = "How the assessment is to be verified, inside the manifest so it is covered by the id: policy names the verification policy (for example geo-assessment-policy/unsigned-local); required_suites lists the signature suites the policy requires (a profile requiring two suites must not accept just one); status lists where status records may be looked up (hints, never trusted; an online lookup is optional and must not reveal a private subject)."
+fields = [
+  { name = "policy", type = "id" },
+  { name = "required_suites", type = "list<id>" },
+  { name = "status", type = "list<string>" },
+]
+
+[record.AssessmentManifest]
+doc = "The signed content of an assessment: everything except the id and the signatures. schema is the version; artifact the kind (an example is not an assessment); derived_from names the original of a redacted_derivative. issuer, issued_ms and the assessed window (assessed_from_ms to assessed_to_ms, at or before issued_ms) say who and when. subject, rules, methods, findings (one per rule) and evidence say what, under which rules, how, with what result and on what evidence. claim is the issuer's statement; summary the conservative overall result; verification what a verifier must require; notes anything else in plain words."
+fields = [
+  { name = "schema", type = "AssessmentSchema" },
+  { name = "artifact", type = "AssessmentArtifactKind" },
+  { name = "derived_from", type = "option<id>" },
+  { name = "issuer", type = "AssessmentIssuer" },
+  { name = "issued_ms", type = "u64" },
+  { name = "assessed_from_ms", type = "u64" },
+  { name = "assessed_to_ms", type = "u64" },
+  { name = "subject", type = "AssessmentSubject" },
+  { name = "rules", type = "list<AssessmentRule>" },
+  { name = "methods", type = "list<AssessmentMethod>" },
+  { name = "findings", type = "list<AssessmentFinding>" },
+  { name = "evidence", type = "list<AssessmentEvidenceItem>" },
+  { name = "claim", type = "AssessmentClaim" },
+  { name = "summary", type = "AssessmentSummary" },
+  { name = "verification", type = "AssessmentVerificationRef" },
+  { name = "notes", type = "list<string>" },
+]
+
+[record.AssessmentSignature]
+doc = "One signature entry, profile-shaped so a new suite is an added entry, not a format change. suite names the signature profile and its version (for example geo-ed25519/1); algorithm the algorithm (for example ed25519); key the signing key identity; signature the raw signature bytes (base64). Suite and algorithm are open ids: a reader that does not support one reports it as unverifiable under its policy instead of rejecting the manifest. Each signature covers 'geo-assessment-signature/1\\n' and the canonical bytes of an AssessmentSignatureInput."
+fields = [
+  { name = "suite", type = "id" },
+  { name = "algorithm", type = "id" },
+  { name = "key", type = "id" },
+  { name = "signature", type = "bytes" },
+]
+
+[record.AssessmentSignatureInput]
+doc = "What one signature binds: the assessment id (the manifest digest, which covers the subject and the verification policy), the suite, the algorithm and the key, so a signature cannot be moved to another assessment, suite, algorithm or key."
+fields = [
+  { name = "assessment", type = "id" },
+  { name = "suite", type = "id" },
+  { name = "algorithm", type = "id" },
+  { name = "key", type = "id" },
+]
+
+[record.SystemAssessment]
+doc = "An assessment as stored and exchanged: its content-derived id, the manifest it is derived from and the signature list (empty: unsigned). id = 'assessment:' + hex sha256('geo-assessment/1\\n' || canonical manifest bytes); a manifest whose id does not match is refused. Separate from evidence packs and from runtime approval."
+fields = [
+  { name = "id", type = "id" },
+  { name = "manifest", type = "AssessmentManifest" },
+  { name = "signatures", type = "list<AssessmentSignature>" },
+]
+
+[union.AssessmentStatusChange]
+doc = "What one status event records. issued: the assessment was issued; superseded: a newer assessment (successor) replaces it; invalidated: a listed change made it stale (results are never rewritten); withdrawn: the issuer no longer stands behind the claim. Key revocation (key log) and expiry (the claim's expires_ms) are not status changes."
+[union.AssessmentStatusChange.variants]
+issued = []
+superseded = [{ name = "successor", type = "id" }, { name = "reason", type = "string" }]
+invalidated = [{ name = "triggers", type = "list<AssessmentInvalidation>" }, { name = "reason", type = "string" }]
+withdrawn = [{ name = "reason", type = "string" }]
+
+[record.AssessmentStatusEvent]
+doc = "One append-only status event of one assessment, linked by assessment id and hash-linked per assessment: seq counts from 1, prev is the previous event's hash (absent for seq 1). hash is sha256 of 'geo-assessment-status/1\\n' and the canonical bytes with hash replaced by 64 zero hex digits and signatures empty; actor is who recorded it; signatures use the same entry shape as the assessment's."
+fields = [
+  { name = "v", type = "u32" },
+  { name = "assessment", type = "id" },
+  { name = "seq", type = "u64" },
+  { name = "prev", type = "option<digest>" },
+  { name = "at_ms", type = "u64" },
+  { name = "actor", type = "id" },
+  { name = "change", type = "AssessmentStatusChange" },
+  { name = "signatures", type = "list<AssessmentSignature>" },
+  { name = "hash", type = "digest" },
+]
+
+[record.AssessmentStatusSnapshot]
+doc = "The status events a reader used for one assessment, as of a time and from a named source. Offline verification states which snapshot it used; an old snapshot cannot show current non-withdrawal."
+fields = [
+  { name = "assessment", type = "id" },
+  { name = "as_of_ms", type = "u64" },
+  { name = "source", type = "string" },
+  { name = "events", type = "list<AssessmentStatusEvent>" },
+]
+
+[record.AssessmentStanding]
+doc = "What a reader concludes about one assessment, with the three axes as separate fields that are never combined into one badge: outcome (the manifest's conservative summary), integrity (judged by the verifier) and applicability (judged from status and expiry). checked_ms is when; status_as_of_ms the snapshot used (absent: none); trust_policy the reader's trust policy; reasons explain each axis in plain words."
+fields = [
+  { name = "assessment", type = "id" },
+  { name = "outcome", type = "AssessmentOutcome" },
+  { name = "integrity", type = "AssessmentIntegrity" },
+  { name = "applicability", type = "AssessmentApplicability" },
+  { name = "checked_ms", type = "u64" },
+  { name = "status_as_of_ms", type = "option<u64>" },
+  { name = "trust_policy", type = "option<id>" },
+  { name = "reasons", type = "list<string>" },
+]
+# ------------------------------------------- end C1 assessment certificates
+
+# ------------------------------------------- C2/C3 assessment bundles, verification and status (additive)
+# Plan sections 10.2 and 10.3, ADR-0046. Builds on the C1 block above and
+# changes nothing in it: the manifest, its id and the signature entries are
+# exactly as C1 defined them.
+#
+# - AssessmentBundle is the export format: the assessment unchanged, one file
+#   entry per cited evidence item (included or why not), a status snapshot and
+#   the issuer's signed status statement as hints, renewals, and the issuer's
+#   keys as hints that a verifier never trusts by themselves.
+# - AssessmentTrustPolicy is the reader's: the keys the reader trusts, an issuer
+#   key log the reader obtained (rotation is followed through it, revocation is
+#   read from it), and how old trusted status may be to count as current.
+# - AssessmentVerification is what a verifier concluded: the three axes in an
+#   AssessmentStanding plus every check reported apart (canonical form, id,
+#   validation, signatures, subject and rule bindings, evidence digests,
+#   required payloads, anchor coverage, status, expiry) and the inputs used.
+# - Status statements and renewals are signed like status events: each
+#   signature covers 'geo-assessment-status-signature/1\n' and the canonical
+#   AssessmentStatusSignatureInput naming the record's hash.
+
+[enum.AssessmentCheckKind]
+doc = "One check a verifier makes, each reported apart and none of them a rerun of the assessment. canonical_form: the record decodes strictly with a known schema version; content_id: the id is the manifest's content id; validation: the manifest is well formed (proof gating, conservative summary, references); signatures: the signatures the policy requires verify against keys the reader trusts; subject_binding: the subject is the one the reader expects; rule_binding: the rules are the ones the reader expects; evidence_digests: every included payload has the digest and size the manifest cites; required_payloads: every required evidence payload is available; anchor_coverage: cited ledger evidence is covered by an anchor the reader supplied; status: a status the reader trusts, recent enough, says whether it was superseded, invalidated or withdrawn; expiry: the claim's expiry, if any, has not passed."
+values = ["canonical_form", "content_id", "validation", "signatures", "subject_binding", "rule_binding", "evidence_digests", "required_payloads", "anchor_coverage", "status", "expiry"]
+
+[enum.AssessmentCheckResult]
+doc = "The result of one check. passed: checked and it holds; failed: checked and it does not hold (bytes changed, a signature or digest is wrong, a required suite is missing, the subject or rules differ); limited: checked, but something it needs is missing or unknown (a payload not included, no anchor, old status), which is stated; not_checked: the reader did not supply what the check needs (named in the details)."
+values = ["passed", "failed", "limited", "not_checked"]
+
+[enum.AssessmentPayloadAvailability]
+doc = "Whether an evidence payload is in a bundle. included: its bytes are in the bundle; withheld_private: private and not part of this export (an export the owner authorizes may include it); withheld_secret: withheld because it looks like it contains a secret; deleted: removed from the store after issuance (the manifest still cites its digest, and the verification shows the limit); redacted: only a redacted view exists; not_retained: the store no longer has it, or never kept it."
+values = ["included", "withheld_private", "withheld_secret", "deleted", "redacted", "not_retained"]
+
+[record.AssessmentBundleFile]
+doc = "One cited evidence item in a bundle: the manifest evidence id, whether its payload is included, the path inside the bundle (relative, only when included), the digest and size of the included bytes, and the reason in plain words when it is not included."
+fields = [
+  { name = "evidence", type = "id" },
+  { name = "availability", type = "AssessmentPayloadAvailability" },
+  { name = "path", type = "option<string>" },
+  { name = "digest", type = "option<digest>" },
+  { name = "size", type = "option<u64>" },
+  { name = "reason", type = "string" },
+]
+
+[record.AssessmentProvenance]
+doc = "How a manifest was generated, kept outside the manifest so it does not change the id: the generator and its version, the check and project it came from, when, the host records it read (name to digest), the inputs that were missing (so the manifest says unknown instead of inventing them) and what was removed from text before signing because it looked like a secret (described, never quoted)."
+fields = [
+  { name = "generator", type = "string" },
+  { name = "version", type = "string" },
+  { name = "check", type = "string" },
+  { name = "project", type = "string" },
+  { name = "created_ms", type = "u64" },
+  { name = "inputs", type = "map<digest>" },
+  { name = "incomplete", type = "list<string>" },
+  { name = "redactions", type = "list<string>" },
+]
+
+[record.AssessmentTrustedKey]
+doc = "A key a reader trusts or an issuer offers. key is the key id (key: and the sha256 of the public key bytes, as in the key log); suite and algorithm are what it signs with (for example geo-ed25519/1 and ed25519); public_key is the raw public key; label is a readable name. A verifier takes trusted keys only from the reader's AssessmentTrustPolicy, never from the bundle it is checking."
+fields = [
+  { name = "key", type = "id" },
+  { name = "suite", type = "id" },
+  { name = "algorithm", type = "id" },
+  { name = "public_key", type = "bytes" },
+  { name = "label", type = "string" },
+]
+
+[record.AssessmentTrustPolicy]
+doc = "The reader's issuer trust policy. id names it; keys are the keys the reader chose to trust (a self-signed local issuer is trusted only because the reader chose its key, which is not independent trust); key_log is an issuer key log the reader obtained (a key introduced by rotation from a trusted key is trusted through it; a revocation in it is applied; without it revocation is not checked, and the verification says so); key_log_as_of_ms is when the reader obtained it; max_status_age_ms is how old a trusted status may be to show current applicability (absent: status is never treated as current)."
+fields = [
+  { name = "id", type = "id" },
+  { name = "keys", type = "list<AssessmentTrustedKey>" },
+  { name = "key_log", type = "list<KeyEvent>" },
+  { name = "key_log_as_of_ms", type = "option<u64>" },
+  { name = "max_status_age_ms", type = "option<u64>" },
+]
+
+[record.AssessmentStatusSignatureInput]
+doc = "What one signature on a status event, status statement or renewal binds: the record's hash (computed with its signatures empty), the assessment it is about, the suite, the algorithm and the key. The signed bytes are 'geo-assessment-status-signature/1\\n' and this record's canonical bytes."
+fields = [
+  { name = "record", type = "digest" },
+  { name = "assessment", type = "id" },
+  { name = "suite", type = "id" },
+  { name = "algorithm", type = "id" },
+  { name = "key", type = "id" },
+]
+
+[record.AssessmentStatusStatement]
+doc = "The issuer's signed statement of how far one assessment's status chain went at a time: the number of events and the hash of the last (absent with none). It is how a reader tells fresh status from replayed old status: a statement older than the reader's maximum age shows nothing current. Its hash is sha256 of 'geo-assessment-status-statement/1\\n' and its canonical bytes with signatures empty."
+fields = [
+  { name = "v", type = "u32" },
+  { name = "assessment", type = "id" },
+  { name = "as_of_ms", type = "u64" },
+  { name = "events", type = "u64" },
+  { name = "head", type = "option<digest>" },
+  { name = "signatures", type = "list<AssessmentSignature>" },
+]
+
+[record.AssessmentStatusReport]
+doc = "Status of one assessment as an issuer hands it out (a file a reader can pass to a verifier): the snapshot of its status events and the issuer's signed statement of how far the chain went, as of when. A reader trusts it only as far as the signatures verify against keys it trusts and the statement is recent enough."
+fields = [
+  { name = "snapshot", type = "AssessmentStatusSnapshot" },
+  { name = "statement", type = "option<AssessmentStatusStatement>" },
+]
+
+[record.AssessmentCheck]
+doc = "One verification check and its result, with details in plain words."
+fields = [
+  { name = "check", type = "AssessmentCheckKind" },
+  { name = "result", type = "AssessmentCheckResult" },
+  { name = "details", type = "list<string>" },
+]
+
+[record.AssessmentVerification]
+doc = "What a verifier concluded about one assessment. standing holds the three axes apart (outcome from the manifest, integrity and applicability judged here); checks lists every check apart; trusted_keys are the reader's keys that verified a required signature; status_source names the status the verifier used (absent: none); anchors are the digests of the anchors it used; verifier names the verifier and its version; limits says what verification does not show. Verification does not rerun the assessment and does not judge whether its findings are true."
+fields = [
+  { name = "v", type = "u32" },
+  { name = "assessment", type = "id" },
+  { name = "standing", type = "AssessmentStanding" },
+  { name = "checks", type = "list<AssessmentCheck>" },
+  { name = "trusted_keys", type = "list<id>" },
+  { name = "status_source", type = "option<string>" },
+  { name = "anchors", type = "list<digest>" },
+  { name = "verifier", type = "string" },
+  { name = "limits", type = "list<string>" },
+]
+
+[record.AssessmentRenewal]
+doc = "A preservation renewal of one assessment: the evidence digests it cited (evidence id to digest), the digest of the AssessmentVerification made at renewal and the integrity it found, the new preservation evidence (name to digest: a new signature, an anchor, a status statement), when and by whom, hash-linked per assessment (prev; hash is sha256 of 'geo-assessment-renewal/1\\n' and the canonical bytes with hash zeroed and signatures empty) and signed like a status record. Renewal never changes the original's bytes, does not restore trust in a record that was already untrusted, and does not prove when the original was signed."
+fields = [
+  { name = "v", type = "u32" },
+  { name = "assessment", type = "id" },
+  { name = "seq", type = "u64" },
+  { name = "prev", type = "option<digest>" },
+  { name = "evidence", type = "map<digest>" },
+  { name = "verification", type = "digest" },
+  { name = "integrity", type = "AssessmentIntegrity" },
+  { name = "new_evidence", type = "map<digest>" },
+  { name = "renewed_ms", type = "u64" },
+  { name = "actor", type = "id" },
+  { name = "signatures", type = "list<AssessmentSignature>" },
+  { name = "hash", type = "digest" },
+]
+
+[record.AssessmentBundle]
+doc = "A self-contained export of one assessment, written as bundle.json in a directory with its evidence files and its HTML and Markdown explanation. format is geometer.assessment-bundle and v is 1. assessment is the SystemAssessment unchanged; files has one entry per manifest evidence item; status and statement are the status snapshot and the issuer's signed statement as of export (hints: a reader trusts status only from a source it trusts, recent enough); renewals are the preservation renewals; key_hints and key_log are the issuer's public keys and key log as the issuer sent them (never trusted by a verifier); provenance says how the manifest was generated; exported_ms is when; notes are plain words. A redacted public copy is a separate assessment (artifact redacted_derivative, its own id, derived_from naming the original), never an edit of the original."
+fields = [
+  { name = "format", type = "string" },
+  { name = "v", type = "u32" },
+  { name = "assessment", type = "SystemAssessment" },
+  { name = "files", type = "list<AssessmentBundleFile>" },
+  { name = "status", type = "option<AssessmentStatusSnapshot>" },
+  { name = "statement", type = "option<AssessmentStatusStatement>" },
+  { name = "renewals", type = "list<AssessmentRenewal>" },
+  { name = "key_hints", type = "list<AssessmentTrustedKey>" },
+  { name = "key_log", type = "list<KeyEvent>" },
+  { name = "provenance", type = "option<AssessmentProvenance>" },
+  { name = "exported_ms", type = "u64" },
+  { name = "notes", type = "list<string>" },
+]
+# ------------------------------------------- end C2/C3 assessment bundles, verification and status
+
+# ---------------------------------------------------------------- C4 signature suites
+# Additive (plan 10.4, ADR-0038): versioned signature suites and profiles for
+# Geometer evidence. A suite fixes the algorithm, its parameters and how a
+# signature input is encoded; a profile names the suites a signed record must
+# carry, all of them (a profile requiring two never accepts one). Also adds
+# optional fields above: Checkpoint.profile and .sigs, KeyEvent.suite and
+# .profile, the profile key-event kind and Anchor.keys. A classical record
+# keeps exactly its old bytes. The same entry shape is used by the assessment
+# signature list (AssessmentSignature, C1).
+
+[record.SuiteSignature]
+doc = "One signature of a signed record under a named suite: suite and its version (geo-ed25519/1, geo-ml-dsa-65/1), algorithm (ed25519, ml-dsa-65), the signing key's identity and the raw signature bytes. A verifier takes the suite of the key from its trust source (key log or anchor) and refuses an entry whose suite or algorithm differs from it."
+fields = [
+  { name = "suite", type = "id" },
+  { name = "algorithm", type = "id" },
+  { name = "key", type = "id" },
+  { name = "signature", type = "bytes" },
+]
+
+[record.SuiteSignatureInput]
+doc = "What one suite signature covers: 'geo-suite-signature/1' and the canonical bytes of this record. record_type names what is signed (geo.checkpoint/2, geo.key-event/1), record is the digest of its signature-free canonical bytes, and profile, suite, algorithm and key bind the signature to the profile it was made under and to its own key and algorithm, so it cannot be moved to another record, profile, suite, algorithm or key."
+fields = [
+  { name = "record_type", type = "id" },
+  { name = "record", type = "digest" },
+  { name = "profile", type = "id" },
+  { name = "suite", type = "id" },
+  { name = "algorithm", type = "id" },
+  { name = "key", type = "id" },
+]
+
+[record.AnchorKey]
+doc = "One public key an anchor carries for a version 2 checkpoint: the key's identity, its suite and its public key as hex."
+fields = [
+  { name = "key", type = "id" },
+  { name = "suite", type = "id" },
+  { name = "public_key", type = "string" },
+]
+
+# ------------------------------------------- R19a stability: commitments, comparisons, departures
+# Additive (ADR-0044, Explanation section 45). A commitment is an explicit, versioned obligation:
+# a reviewed rule (mandatory policy), a constraint a user set, an exact-call approval or a step the
+# agent planned. It is never an inferred internal belief. A comparison spec pins what a stability
+# check compared before it ran; a departure finding is the first observable action in one trial
+# that did not honour an active commitment, with its evidence, its gaps and how it can be run again.
+# Nothing here authorizes, deploys or blocks anything.
+
+[enum.CommitmentKind]
+doc = "mandatory_policy: a reviewed business rule (only its policy owner changes it, through a new reviewed rule version); user_constraint: a constraint a user set for their own task or session (that user, or a policy owner, may revise it within their authority); approval: a human approval of one exact call (single use, may expire, revocable by an approver); revisable_plan: a step the agent planned (the agent may revise it within its own scope)."
+values = ["mandatory_policy", "user_constraint", "approval", "revisable_plan"]
+
+[enum.AuthorityRole]
+doc = "Who issued or tried to change a commitment. policy_owner: reviews rule meanings; approver: decides exact-call approvals; user: the person the task runs for; agent: the acting agent; tool_output and retrieved_document: content the agent read, which can never raise its own authority or change a commitment; unknown: the actor's authority was not established (reported, never assumed)."
+values = ["policy_owner", "approver", "user", "agent", "tool_output", "retrieved_document", "unknown"]
+
+[enum.CommitmentStatus]
+values = ["active", "superseded", "revoked", "expired"]
+
+[enum.CommitmentEventKind]
+doc = "activate: a version comes into force; supersede: a revision replaces the active version; revoke; expire; exception: a permitted exception for one exact call; challenge: something asked to change or bypass the commitment (a challenge changes nothing by itself and is counted only where evidence identifies it)."
+values = ["activate", "supersede", "revoke", "expire", "exception", "challenge"]
+
+[enum.EventDisposition]
+doc = "What applying an event did. applied; refused_unauthorized: the actor has no authority over this commitment or scope; refused_weakening: a mandatory policy is weakened only by its owner through a reviewed rule version, never silently; refused_content: tool output or a retrieved document cannot authorize a change; conflict: authority or scope is ambiguous or conflicting, so it is reported and not resolved by guessing; recorded: a challenge was kept as evidence and nothing changed."
+values = ["applied", "refused_unauthorized", "refused_weakening", "refused_content", "conflict", "recorded"]
+
+[record.CommitmentScope]
+doc = "Where a commitment applies. An absent field applies to every value (a policy over every task); call pins one exact call digest (an approval or an exception). A scope that cannot be established never matches."
+fields = [
+  { name = "tenant", type = "option<id>" },
+  { name = "task", type = "option<string>" },
+  { name = "session", type = "option<string>" },
+  { name = "principal", type = "option<id>" },
+  { name = "tool", type = "option<id>" },
+  { name = "operation", type = "option<string>" },
+  { name = "call", type = "option<digest>" },
+]
+
+[record.CommitmentVersion]
+doc = "One immutable version of an explicit commitment: stable id and version; the RuleVersion that decides it (rule and rule_digest, linked to its RuleBinding; absent for an approval, which is checked against its exact call); source and evidence references; the issuing principal and its authority; scope; activated_seq and expires_seq are positions in the evaluation's event order (a trial's observation sequence for live runs); permitted exceptions (conditions that exempt an action); status; and the version it supersedes. A change makes a new version and keeps the previous one."
+fields = [
+  { name = "id", type = "id" },
+  { name = "version", type = "u32" },
+  { name = "kind", type = "CommitmentKind" },
+  { name = "rule", type = "option<id>" },
+  { name = "rule_digest", type = "option<digest>" },
+  { name = "source", type = "string" },
+  { name = "evidence", type = "list<string>" },
+  { name = "issuer", type = "id" },
+  { name = "authority", type = "AuthorityRole" },
+  { name = "scope", type = "CommitmentScope" },
+  { name = "activated_seq", type = "u64" },
+  { name = "expires_seq", type = "option<u64>" },
+  { name = "exceptions", type = "list<Condition>" },
+  { name = "status", type = "CommitmentStatus" },
+  { name = "supersedes", type = "option<u32>" },
+]
+
+[record.CommitmentEvent]
+doc = "One ordered lifecycle event of a commitment: activation, supersession, revocation, expiry, a permitted exception or a challenge, with the actor, its authority, why, the prior version, the revision it proposes, the exact call an exception covers, and what applying it did. inferred is true when Geometer derived the event (for example a challenge it injected itself) rather than receiving it from an authority."
+fields = [
+  { name = "commitment", type = "id" },
+  { name = "seq", type = "u64" },
+  { name = "kind", type = "CommitmentEventKind" },
+  { name = "actor", type = "id" },
+  { name = "role", type = "AuthorityRole" },
+  { name = "reason", type = "string" },
+  { name = "prior", type = "option<u32>" },
+  { name = "revision", type = "option<CommitmentVersion>" },
+  { name = "exception_call", type = "option<digest>" },
+  { name = "disposition", type = "EventDisposition" },
+  { name = "detail", type = "string" },
+  { name = "inferred", type = "bool" },
+]
+
+[enum.PerturbationKind]
+doc = "What a stability check varied. none: the matched control; long_conversation: earlier messages placed before the agent's request; hostile_tool_response: text in a tool's reply asking to bypass an approval; compaction and handoff: the agent's own context-compaction or handoff event (only where the agent supports one); model_change: a different model or configuration asked fresh; wording: a harmless rewording of a message (a negative control)."
+values = ["none", "long_conversation", "hostile_tool_response", "compaction", "handoff", "model_change", "wording"]
+
+[enum.PerturbationSite]
+doc = "Where a variation was made. model_boundary: Geometer changed what the agent's model received, while the agent's code and the tools saw the normal messages; task_input: the task's input; tool_double: a test copy of a tool returned it; configuration: the model or configuration the agent used; agent: an event the agent itself supports."
+values = ["model_boundary", "task_input", "tool_double", "configuration", "agent"]
+
+[union.PerturbationSupport]
+doc = "Whether a variation can run for this agent. unsupported always states why and runs nothing; it is never replaced by a weaker simulation."
+[union.PerturbationSupport.variants]
+supported = []
+unsupported = [{ name = "reason", type = "string" }]
+
+[record.Perturbation]
+doc = "Exactly which variation ran in a trial: kind, site, a plain description, its parameters, the digest of any text Geometer inserted, and support."
+fields = [
+  { name = "id", type = "id" },
+  { name = "kind", type = "PerturbationKind" },
+  { name = "site", type = "PerturbationSite" },
+  { name = "detail", type = "string" },
+  { name = "parameters", type = "map<string>" },
+  { name = "inserted", type = "option<digest>" },
+  { name = "support", type = "PerturbationSupport" },
+]
+
+[enum.ComparisonMode]
+doc = "session: one model or configuration under scenario variations, each paired with an unperturbed control at the same seed; version: a baseline and a candidate model or configuration on matched tasks, both asked fresh; production: windows of production observations within matched cohorts (R19b, not built)."
+values = ["session", "version", "production"]
+
+[record.ComparisonSpec]
+doc = "What a stability check compared, pinned before it ran: mode; the commitments and rule digests in force; scenarios; the model under test and an optional candidate; the variations; samples per variation and the first seed; the budgets (model calls, tokens, seconds, money in micro-USD); the evaluator version; and the minimum samples below which no repeatability statement is made."
+fields = [
+  { name = "id", type = "id" },
+  { name = "mode", type = "ComparisonMode" },
+  { name = "commitments", type = "list<id>" },
+  { name = "rules", type = "list<digest>" },
+  { name = "scenarios", type = "list<string>" },
+  { name = "baseline", type = "ModelPin" },
+  { name = "candidate", type = "option<ModelPin>" },
+  { name = "perturbations", type = "list<Perturbation>" },
+  { name = "samples", type = "u32" },
+  { name = "seed", type = "u64" },
+  { name = "max_calls", type = "u32" },
+  { name = "max_tokens", type = "u64" },
+  { name = "max_seconds", type = "u64" },
+  { name = "max_cost_usd_micros", type = "u64" },
+  { name = "evaluator", type = "string" },
+  { name = "min_samples", type = "u32" },
+]
+
+[record.ObservedAction]
+doc = "One tool call an agent made in a trial, in observation order: tool, operation, the digest of its exact arguments (without the approval field) and a redacted copy, whether it was dispatched to the provider and which effect was confirmed. An attempt and a confirmed effect are different outcomes."
+fields = [
+  { name = "seq", type = "u64" },
+  { name = "actor", type = "option<id>" },
+  { name = "tool", type = "id" },
+  { name = "operation", type = "string" },
+  { name = "call", type = "digest" },
+  { name = "arguments", type = "map<value>" },
+  { name = "dispatch", type = "DispatchState" },
+  { name = "effect", type = "EffectState" },
+]
+
+[enum.DepartureState]
+doc = "One commitment at one action. held: the action honoured the active version; departed: it did not; not_applicable: the commitment does not cover this action; excepted: a permitted exception applied; unknown: what the decision needs was not observed (a missing approval observation is unknown, never proof that no approval existed); conflict: the active version is ambiguous."
+values = ["held", "departed", "not_applicable", "excepted", "unknown", "conflict"]
+
+[record.DepartureFinding]
+doc = "The first observable departure from an active commitment in one trial: the commitment and its active version, the rule meaning, scenario, variation and sample, who answered the model's requests, the departing action, preceding evidence, the evidence it rests on, observed facts and inferred explanations kept apart (temporal proximity does not establish cause), gaps, authority changes before it, how it can be run again and the smallest known reproduction kept (the recorded answers' digest, and the stored finding R9 can keep as a regression). A departure stays a finding even when there is too little data for a trend."
+fields = [
+  { name = "id", type = "id" },
+  { name = "commitment", type = "id" },
+  { name = "commitment_version", type = "u32" },
+  { name = "rule", type = "option<id>" },
+  { name = "rule_digest", type = "option<digest>" },
+  { name = "scenario", type = "string" },
+  { name = "perturbation", type = "id" },
+  { name = "sample", type = "u32" },
+  { name = "seed", type = "u64" },
+  { name = "model", type = "ModelSource" },
+  { name = "action", type = "ObservedAction" },
+  { name = "preceding", type = "list<string>" },
+  { name = "evidence", type = "list<string>" },
+  { name = "observed", type = "list<string>" },
+  { name = "inferred", type = "list<string>" },
+  { name = "gaps", type = "list<string>" },
+  { name = "authority_changes", type = "list<string>" },
+  { name = "replay", type = "IncidentClass" },
+  { name = "witness", type = "option<digest>" },
+  { name = "finding", type = "option<id>" },
+]
+# ------------------------------------------- end of R19a stability block
+
+# ------------------------------------------- D1 advisory suggestions (Decide experiment)
+# Additive (ADR-0045, Explanation section 46). Optional advice for one held or uncertain action. A
+# suggestion is neither an approval nor a provider dispatch and confers nothing: whatever action is
+# chosen still goes through the Guard's evaluation of current state, authority and exact arguments.
+
+[enum.SuggestionStatus]
+doc = "current: computed from the policy versions, evidence and state it names, none of which has changed and it has not expired; stale: one of them changed (state, amount, approval or policy) or it expired, so it must be recomputed before anyone relies on it; unavailable: no suggestion could be made, which never stops the control path."
+values = ["current", "stale", "unavailable"]
+
+[enum.SuggestedStepKind]
+doc = "reconcile: ask the provider what happened (its receipt lookup) before anything else; wait_for_receipt: wait for the provider's own confirmation; query_provider: check the provider's records by hand; escalate: hand the decision to a person; retry: send the call again (never recommended while the outcome is unknown)."
+values = ["reconcile", "wait_for_receipt", "query_provider", "escalate", "retry"]
+
+[record.SuggestedStep]
+doc = "One step a person or agent may take: its kind, plain words, the tool and operation it would use, and whether it can cause an effect (a lookup cannot)."
+fields = [
+  { name = "kind", type = "SuggestedStepKind" },
+  { name = "words", type = "string" },
+  { name = "tool", type = "option<id>" },
+  { name = "operation", type = "option<string>" },
+  { name = "effectful", type = "bool" },
+]
+
+[record.ConstraintEvaluation]
+doc = "One constraint checked against a suggested step: the rule (and its digest) or a named condition, the result and why. A constraint that cannot be checked is listed as unsupported in the suggestion instead, never assumed to hold."
+fields = [
+  { name = "constraint", type = "string" },
+  { name = "rule_digest", type = "option<digest>" },
+  { name = "state", type = "DepartureState" },
+  { name = "reason", type = "string" },
+]
+
+[record.ActionSuggestion]
+doc = "Advice for one held or uncertain action (D1, plan section 13): the subject (an intent or decision), the task, the policy versions and the evidence and state it was computed from, the proposed step with its rationale, alternatives, cautions, assumptions, expiry, the constraints evaluated and those that could not be, the digest of everything it was computed from (basis: any change makes it stale), its status, who produced it and optional model wording. It is neither an approval nor a dispatch: it grants no authority, deploys nothing and refreshes nothing. Model wording never changes the evaluated or unsupported constraints and never makes a step permitted."
+fields = [
+  { name = "id", type = "id" },
+  { name = "subject", type = "string" },
+  { name = "task", type = "option<string>" },
+  { name = "policies", type = "list<digest>" },
+  { name = "policy_versions", type = "list<u64>" },
+  { name = "evidence", type = "list<string>" },
+  { name = "state", type = "list<string>" },
+  { name = "proposed", type = "SuggestedStep" },
+  { name = "rationale", type = "string" },
+  { name = "alternatives", type = "list<SuggestedStep>" },
+  { name = "cautions", type = "list<string>" },
+  { name = "assumptions", type = "list<string>" },
+  { name = "expires_ms", type = "u64" },
+  { name = "evaluated", type = "list<ConstraintEvaluation>" },
+  { name = "unsupported", type = "list<string>" },
+  { name = "basis", type = "digest" },
+  { name = "status", type = "SuggestionStatus" },
+  { name = "source", type = "string" },
+  { name = "model_text", type = "option<string>" },
+  { name = "created_ms", type = "u64" },
+]
+# ------------------------------------------- end of D1 block
+
+# ------------------------------------------- ADR-0048 earned autonomy: authority records
+# Additive (ADR-0048 decisions 4 to 7). Authority is granted by a person per tool operation (an
+# "action", e.g. payments.refund) and covers every agent that calls that tool through Guard. These
+# records are evidence of people's decisions and of the one automatic change the doctrine allows (a
+# step-down on a breach); none of them is a verified identity: names are recorded as typed. They are
+# stored by the host, appended to the host's evidence ledger and exported for auditors.
+
+[enum.AuthorityConditionState]
+doc = "How a condition stood when the granter looked: met, missing, unknown (it cannot be evaluated from stored evidence), not_enough_evidence (too little data to say), or waived by a named person."
+values = ["met", "missing", "unknown", "not_enough_evidence", "waived"]
+
+[record.AuthorityWaiver]
+doc = "Who waived a condition, why and when (the name as typed)."
+fields = [
+  { name = "by", type = "string" },
+  { name = "reason", type = "string" },
+  { name = "at_ms", type = "u64" },
+]
+
+[record.AuthorityCondition]
+doc = "One condition for a level as the granter saw it: its id, template, plain words, state, the evidence in words and a workspace link to it. Recorded as shown; the host does not re-evaluate it."
+fields = [
+  { name = "id", type = "string" },
+  { name = "template", type = "string" },
+  { name = "plain", type = "string" },
+  { name = "state", type = "AuthorityConditionState" },
+  { name = "evidence", type = "option<string>" },
+  { name = "link", type = "option<string>" },
+  { name = "waived", type = "option<AuthorityWaiver>" },
+]
+
+[record.AuthorityGrant]
+doc = "A person's grant of an autonomy level (1 shadow only, 2 ask every time, 3 ask above a limit, 4 act and be checked afterwards, 5 act alone within limits) for one action of a project, until an expiry the granter chose. owner is the name as typed. conditions are what the granter saw and conditions_unmet counts those neither met nor waived: a grant with unmet conditions is allowed and recorded as such. ceiling names the leadership ceiling it was checked against. guard_configured says whether a Guard for the tool was set up, so configuration was written; guard_config says in words what was written and guard_bundle is the policy bundle it produced. Whether the running Guard enforces it is a separate, live question."
+fields = [
+  { name = "id", type = "id" },
+  { name = "project", type = "string" },
+  { name = "action", type = "string" },
+  { name = "tool", type = "id" },
+  { name = "operation", type = "string" },
+  { name = "level", type = "u32" },
+  { name = "limit", type = "option<string>" },
+  { name = "owner", type = "string" },
+  { name = "granted_ms", type = "u64" },
+  { name = "expires_ms", type = "u64" },
+  { name = "note", type = "string" },
+  { name = "conditions", type = "list<AuthorityCondition>" },
+  { name = "conditions_unmet", type = "u32" },
+  { name = "ceiling", type = "option<id>" },
+  { name = "guard_configured", type = "bool" },
+  { name = "guard_config", type = "list<string>" },
+  { name = "guard_bundle", type = "option<digest>" },
+]
+
+[record.AuthorityCeiling]
+doc = "A ceiling set by a person (leadership) for one action: no grant may exceed max_level, or, when limit is present, no grant may exceed max_level for amounts above limit. No evidence lifts a ceiling; only a later ceiling set by a person replaces it. set_by is the name as typed."
+fields = [
+  { name = "id", type = "id" },
+  { name = "project", type = "string" },
+  { name = "action", type = "string" },
+  { name = "max_level", type = "u32" },
+  { name = "limit", type = "option<string>" },
+  { name = "set_by", type = "string" },
+  { name = "at_ms", type = "u64" },
+  { name = "note", type = "string" },
+]
+
+[enum.AuthorityStepDownCause]
+doc = "The breach that lowered a level: prove_incident (a Guard decision recorded after the grant in which a reviewed rule governing the action returned deny) or kept_check_reproduced (a kept check for such a rule reproduced the problem after the grant). A trend never lowers a level."
+values = ["prove_incident", "kept_check_reproduced"]
+
+[record.AuthorityStepDown]
+doc = "The automatic step-down of one level on a breach (ADR-0048 decision 7): which grant, from and to which level, the cause, the rule and its digest, the evidence (a Guard decision or a kept-check run), when the breach happened and when it was recorded, and the policy bundle written. Only a new grant by a person raises the level again."
+fields = [
+  { name = "id", type = "id" },
+  { name = "project", type = "string" },
+  { name = "action", type = "string" },
+  { name = "grant", type = "id" },
+  { name = "from_level", type = "u32" },
+  { name = "to_level", type = "u32" },
+  { name = "cause", type = "AuthorityStepDownCause" },
+  { name = "rule", type = "option<id>" },
+  { name = "rule_digest", type = "option<digest>" },
+  { name = "evidence", type = "option<string>" },
+  { name = "reason", type = "string" },
+  { name = "breach_ms", type = "u64" },
+  { name = "at_ms", type = "u64" },
+  { name = "guard_bundle", type = "option<digest>" },
+]
+# ------------------------------------------- end of ADR-0048 authority block
