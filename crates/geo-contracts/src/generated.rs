@@ -246,7 +246,7 @@ impl Canon for Transition {
     }
 }
 
-/// Typed rule families. exclusive_effects: for one entity (the values of the entity argument fields), at most one of the listed operations of a tool may commit. effect_requires_reading: every committed effect of the operation must carry the named dispatch-time reading as true. ns is <service>.<table>. State families read the final state: not_null (a present, non-null value), value_domain (non-null values among allowed; numbers compare by value), unique_key (no two rows share a key without nulls), reference (every key without nulls exists in target_ns).
+/// Typed rule families. exclusive_effects: for one entity (the values of the entity argument fields), at most one of the listed operations of a tool may commit. effect_requires_reading: every committed effect of the operation must carry the named dispatch-time reading as true. argument_bound: the number in the named argument of every call to the operation of the tool lies between min and max, both inclusive and either optional (text such as "80.00" compares as an exact decimal; a missing or non-numeric argument is unknown, never a pass; decided per call). forbidden_call: the operation of the tool is never called, whatever its arguments or outcome (a call the gateway or hook saw, committed or not; decided per call, so the Guard can refuse it before dispatch). ns is <service>.<table>. State families read the final state: not_null (a present, non-null value), value_domain (non-null values among allowed; numbers compare by value), unique_key (no two rows share a key without nulls), reference (every key without nulls exists in target_ns).
 #[derive(Debug, Clone, PartialEq)]
 pub enum RuleBody {
     NumericBound { ns: String, column: String, min: Option<Value>, max: Option<Value> },
@@ -255,6 +255,7 @@ pub enum RuleBody {
     AtMostOnce { op: String, identity: Vec<String> },
     AtMostOnceEffect { tool: Id, operation: String },
     ArgumentAllowlist { tool: Id, operation: String, field: String, allowed_suffixes: Vec<String> },
+    ArgumentBound { tool: Id, operation: String, field: String, min: Option<Value>, max: Option<Value> },
     CallBoundApproval { tool: Id, operation: String, amount_field: String, threshold: Value, approval_field: String },
     BoundedCompletion { trigger_op: String, trigger_field: String, completion_op: String, completion_field: String },
     RowInvariant { ns: String, when: Vec<Condition>, left: String, right: String },
@@ -264,6 +265,7 @@ pub enum RuleBody {
     Reference { ns: String, columns: Vec<String>, target_ns: String, target_columns: Vec<String> },
     ExclusiveEffects { tool: Id, operations: Vec<String>, entity: Vec<String> },
     EffectRequiresReading { tool: Id, operation: String, reading: String },
+    ForbiddenCall { tool: Id, operation: String },
 }
 
 impl RuleBody {
@@ -275,6 +277,7 @@ impl RuleBody {
             RuleBody::AtMostOnce { .. } => "at_most_once",
             RuleBody::AtMostOnceEffect { .. } => "at_most_once_effect",
             RuleBody::ArgumentAllowlist { .. } => "argument_allowlist",
+            RuleBody::ArgumentBound { .. } => "argument_bound",
             RuleBody::CallBoundApproval { .. } => "call_bound_approval",
             RuleBody::BoundedCompletion { .. } => "bounded_completion",
             RuleBody::RowInvariant { .. } => "row_invariant",
@@ -284,6 +287,7 @@ impl RuleBody {
             RuleBody::Reference { .. } => "reference",
             RuleBody::ExclusiveEffects { .. } => "exclusive_effects",
             RuleBody::EffectRequiresReading { .. } => "effect_requires_reading",
+            RuleBody::ForbiddenCall { .. } => "forbidden_call",
         }
     }
 }
@@ -320,6 +324,13 @@ impl Canon for RuleBody {
                 put(&mut m, "operation", operation);
                 put(&mut m, "field", field);
                 put(&mut m, "allowed_suffixes", allowed_suffixes);
+            }
+            RuleBody::ArgumentBound { tool, operation, field, min, max } => {
+                put(&mut m, "tool", tool);
+                put(&mut m, "operation", operation);
+                put(&mut m, "field", field);
+                put_opt(&mut m, "min", min);
+                put_opt(&mut m, "max", max);
             }
             RuleBody::CallBoundApproval { tool, operation, amount_field, threshold, approval_field } => {
                 put(&mut m, "tool", tool);
@@ -369,6 +380,10 @@ impl Canon for RuleBody {
                 put(&mut m, "operation", operation);
                 put(&mut m, "reading", reading);
             }
+            RuleBody::ForbiddenCall { tool, operation } => {
+                put(&mut m, "tool", tool);
+                put(&mut m, "operation", operation);
+            }
         }
         Json::Obj(m)
     }
@@ -399,6 +414,10 @@ impl Canon for RuleBody {
             "argument_allowlist" => {
                 only_fields(m, &["tool", "operation", "field", "allowed_suffixes", "kind"], path)?;
                 Ok(RuleBody::ArgumentAllowlist { tool: req(m, "tool", path)?, operation: req(m, "operation", path)?, field: req(m, "field", path)?, allowed_suffixes: req(m, "allowed_suffixes", path)? })
+            }
+            "argument_bound" => {
+                only_fields(m, &["tool", "operation", "field", "min", "max", "kind"], path)?;
+                Ok(RuleBody::ArgumentBound { tool: req(m, "tool", path)?, operation: req(m, "operation", path)?, field: req(m, "field", path)?, min: opt(m, "min", path)?, max: opt(m, "max", path)? })
             }
             "call_bound_approval" => {
                 only_fields(m, &["tool", "operation", "amount_field", "threshold", "approval_field", "kind"], path)?;
@@ -435,6 +454,10 @@ impl Canon for RuleBody {
             "effect_requires_reading" => {
                 only_fields(m, &["tool", "operation", "reading", "kind"], path)?;
                 Ok(RuleBody::EffectRequiresReading { tool: req(m, "tool", path)?, operation: req(m, "operation", path)?, reading: req(m, "reading", path)? })
+            }
+            "forbidden_call" => {
+                only_fields(m, &["tool", "operation", "kind"], path)?;
+                Ok(RuleBody::ForbiddenCall { tool: req(m, "tool", path)?, operation: req(m, "operation", path)? })
             }
             other => Err(unknown_variant(path, "RuleBody", other)),
         }

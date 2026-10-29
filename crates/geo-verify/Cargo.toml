@@ -1,7 +1,7 @@
 [package]
 name = "geo-verify"
 description = "Standalone evidence verifier: checks an exported evidence pack against a trusted anchor with no host, database, runtime or network code"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 edition = "2024"
 license = "Apache-2.0"
 publish = false

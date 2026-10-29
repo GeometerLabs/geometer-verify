@@ -574,7 +574,7 @@ pub fn verify_pack_with(pack: &EvidencePack, anchors: &[Anchor], policy: &suite:
             None if c.seq > last && !declared_gap(&pack.gaps, last + 1, c.seq) => inv.push(Finding::new(
                 "truncated",
                 Some(c.seq),
-                "a signed checkpoint proves entries that the pack does not have: the tail was cut",
+                "a signed checkpoint shows entries that the pack does not have: the tail was cut",
             )),
             _ => {}
         }

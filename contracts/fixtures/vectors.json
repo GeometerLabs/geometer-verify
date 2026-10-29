@@ -1,133 +1,5 @@
 {
  "doc": "Shared codec vectors. Every language must decode `input` (or base64 `input_b64`) as `type` and re-encode to exactly `canonical`, or reject with exactly `error`.",
- "negative": [
-  {
-   "id": "invalid-digest",
-   "type": "ProjectRevision",
-   "error": "invalid_digest",
-   "input": "{\"digest\":\"sha256:ABC\",\"inputs\":[]}"
-  },
-  {
-   "id": "search-reach-no-percentage",
-   "type": "SearchReach",
-   "error": "unknown_field",
-   "input": "{\"trials\":\"12\",\"complete\":\"9\",\"sleep_blocked\":\"1\",\"depth_cut\":\"0\",\"invalid\":\"0\",\"decisions\":\"31\",\"permits\":\"57\",\"unexplored\":\"2\",\"pruned\":\"4\",\"exhausted\":\"trials\",\"finished\":false,\"notes\":[\"budget: trials\"],\"coverage_percent\":\"97\"}"
-  },
-  {
-   "id": "search-budget-depth-as-string",
-   "type": "SearchBudget",
-   "error": "type",
-   "input": "{\"trials\":\"1\",\"permits\":\"1\",\"depth\":\"3\"}"
-  },
-  {
-   "id": "rule-body-value-domain-extra-field",
-   "type": "RuleBody",
-   "error": "unknown_field",
-   "input": "{\"allowed\":[],\"column\":\"c\",\"kind\":\"value_domain\",\"ns\":\"a.b\",\"when\":[]}"
-  },
-  {
-   "id": "choice-reach-no-percentage",
-   "type": "SearchReach",
-   "error": "unknown_field",
-   "input": "{\"trials\":\"40\",\"complete\":\"31\",\"sleep_blocked\":\"9\",\"depth_cut\":\"0\",\"invalid\":\"0\",\"decisions\":\"112\",\"permits\":\"380\",\"unexplored\":\"0\",\"pruned\":\"54\",\"finished\":true,\"notes\":[\"2 recorded alternative(s) replayed: a recorded set is not the model's output space\"],\"choices\":[{\"class\":\"fault:timeout_after_effect\",\"offered\":\"12\",\"explored\":\"7\",\"share_percent\":\"58\"},{\"class\":\"timer\",\"offered\":\"9\",\"explored\":\"9\"},{\"class\":\"data:recorded\",\"offered\":\"4\",\"explored\":\"4\"}]}"
-  },
-  {
-   "id": "rule-body-r7-exclusive-effects-missing-entity",
-   "type": "RuleBody",
-   "error": "missing_field",
-   "input": "{\"kind\":\"exclusive_effects\",\"tool\":\"orders\",\"operations\":[\"ship\",\"refund\"]}"
-  },
-  {
-   "id": "rule-body-r7-effect-requires-reading-extra-field",
-   "type": "RuleBody",
-   "error": "unknown_field",
-   "input": "{\"kind\":\"effect_requires_reading\",\"tool\":\"payouts\",\"operation\":\"payout\",\"reading\":\"approval_valid\",\"expires\":\"5\"}"
-  },
-  {
-   "id": "ledger-entry-unknown-kind",
-   "type": "LedgerEntry",
-   "error": "unknown_variant",
-   "input": "{\"v\":1,\"tenant\":\"acme\",\"seq\":\"2\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"rumour\",\"subject\":\"gd-1\",\"at_ms\":\"1790000000000\",\"body_type\":\"GuardDecision\",\"body\":\"{\\\"id\\\":\\\"gd-1\\\"}\",\"payload\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"size\":\"48\"},\"links\":[{\"rel\":\"decision\",\"ledger\":\"ledger-0123456789abcdef\",\"tenant\":\"acme\",\"seq\":\"7\",\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}],\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}"
-  },
-  {
-   "id": "ledger-entry-seq-as-number",
-   "type": "LedgerEntry",
-   "error": "type",
-   "input": "{\"v\":1,\"tenant\":\"acme\",\"seq\":2,\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"guard_decision\",\"subject\":\"gd-1\",\"at_ms\":\"1790000000000\",\"body_type\":\"GuardDecision\",\"body\":\"{\\\"id\\\":\\\"gd-1\\\"}\",\"payload\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"size\":\"48\"},\"links\":[{\"rel\":\"decision\",\"ledger\":\"ledger-0123456789abcdef\",\"tenant\":\"acme\",\"seq\":\"7\",\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}],\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}"
-  },
-  {
-   "id": "ledger-entry-bad-hash",
-   "type": "LedgerEntry",
-   "error": "invalid_digest",
-   "input": "{\"v\":1,\"tenant\":\"acme\",\"seq\":\"2\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"guard_decision\",\"subject\":\"gd-1\",\"at_ms\":\"1790000000000\",\"body_type\":\"GuardDecision\",\"body\":\"{\\\"id\\\":\\\"gd-1\\\"}\",\"payload\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"size\":\"48\"},\"links\":[{\"rel\":\"decision\",\"ledger\":\"ledger-0123456789abcdef\",\"tenant\":\"acme\",\"seq\":\"7\",\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}],\"hash\":\"sha256:xyz\"}"
-  },
-  {
-   "id": "ledger-entry-unknown-field",
-   "type": "LedgerEntry",
-   "error": "unknown_field",
-   "input": "{\"v\":1,\"tenant\":\"acme\",\"seq\":\"2\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"guard_decision\",\"subject\":\"gd-1\",\"at_ms\":\"1790000000000\",\"body_type\":\"GuardDecision\",\"body\":\"{\\\"id\\\":\\\"gd-1\\\"}\",\"payload\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"size\":\"48\"},\"links\":[{\"rel\":\"decision\",\"ledger\":\"ledger-0123456789abcdef\",\"tenant\":\"acme\",\"seq\":\"7\",\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}],\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"editor\":\"someone\"}"
-  },
-  {
-   "id": "ledger-entry-missing-body",
-   "type": "LedgerEntry",
-   "error": "missing_field",
-   "input": "{\"v\":1,\"tenant\":\"acme\",\"seq\":\"2\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"guard_decision\",\"subject\":\"gd-1\",\"at_ms\":\"1790000000000\",\"body_type\":\"GuardDecision\",\"payload\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"size\":\"48\"},\"links\":[{\"rel\":\"decision\",\"ledger\":\"ledger-0123456789abcdef\",\"tenant\":\"acme\",\"seq\":\"7\",\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}],\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}"
-  },
-  {
-   "id": "checkpoint-count-as-number",
-   "type": "Checkpoint",
-   "error": "type",
-   "input": "{\"v\":1,\"tenant\":\"acme\",\"seq\":\"9\",\"head\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"count\":9,\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"key_log_seq\":\"1\",\"at_ms\":\"1790000001000\",\"sig\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}"
-  },
-  {
-   "id": "key-event-unknown-kind",
-   "type": "KeyEvent",
-   "error": "unknown_variant",
-   "input": "{\"v\":1,\"seq\":\"1\",\"kind\":\"forget\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"public_key\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"compromised\":false,\"at_ms\":\"1789999990000\",\"note\":\"first key\",\"sigs\":[{\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sig\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}],\"hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}"
-  },
-  {
-   "id": "action-evidence-unknown-effect",
-   "type": "ActionEvidence",
-   "error": "unknown_variant",
-   "input": "{\"subject\":\"gd-1\",\"dispatch\":\"dispatched\",\"effect\":\"executed\",\"seqs\":[],\"notes\":[]}"
-  },
-  {
-   "id": "anchor-missing-checkpoint",
-   "type": "Anchor",
-   "error": "missing_field",
-   "input": "{\"v\":1,\"public_key\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"note\":\"\"}"
-  },
-  {
-   "id": "suite-signature-bad-bytes",
-   "type": "SuiteSignature",
-   "error": "non_canonical",
-   "input": "{\"suite\": \"geo-ml-dsa-65/1\", \"algorithm\": \"ml-dsa-65\", \"key\": \"key:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\", \"signature\": \"not base64!\"}"
-  },
-  {
-   "id": "suite-signature-missing-algorithm",
-   "type": "SuiteSignature",
-   "error": "missing_field",
-   "input": "{\"suite\": \"geo-ml-dsa-65/1\", \"key\": \"key:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\", \"signature\": \"AAECAwQFBgcICQoLDA0ODw==\"}"
-  },
-  {
-   "id": "checkpoint-sigs-null",
-   "type": "Checkpoint",
-   "error": "type",
-   "input": "{\"v\": 2, \"tenant\": \"acme\", \"seq\": \"32\", \"head\": \"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\", \"count\": \"32\", \"key\": \"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\", \"key_log_seq\": \"3\", \"at_ms\": \"1790000000000\", \"sig\": \"\", \"profile\": \"geo-profile/hybrid/1\", \"sigs\": null}"
-  },
-  {
-   "id": "suite-input-bad-digest",
-   "type": "SuiteSignatureInput",
-   "error": "invalid_digest",
-   "input": "{\"record_type\": \"geo.checkpoint/2\", \"record\": \"sha256:xyz\", \"profile\": \"geo-profile/hybrid/1\", \"suite\": \"geo-ml-dsa-65/1\", \"algorithm\": \"ml-dsa-65\", \"key\": \"key:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}"
-  },
-  {
-   "id": "anchor-key-unknown-field",
-   "type": "AnchorKey",
-   "error": "unknown_field",
-   "input": "{\"key\": \"key:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\", \"suite\": \"geo-ml-dsa-65/1\", \"public_key\": \"abababab\", \"extra\": 1}"
-  }
- ],
  "positive": [
   {
    "id": "project-revision",
@@ -182,6 +54,12 @@
    "type": "RuleBody",
    "input": "{\"reading\":\"approval_valid\",\"kind\":\"effect_requires_reading\",\"tool\":\"payouts\",\"operation\":\"payout\"}",
    "canonical": "{\"kind\":\"effect_requires_reading\",\"operation\":\"payout\",\"reading\":\"approval_valid\",\"tool\":\"payouts\"}"
+  },
+  {
+   "id": "rule-body-forbidden-call",
+   "type": "RuleBody",
+   "input": "{\"operation\":\"issue_refund\",\"kind\":\"forbidden_call\",\"tool\":\"in_process\"}",
+   "canonical": "{\"kind\":\"forbidden_call\",\"operation\":\"issue_refund\",\"tool\":\"in_process\"}"
   },
   {
    "id": "ledger-entry-with-payload",
@@ -308,6 +186,140 @@
    "type": "KeyEvent",
    "input": "{\"v\": 1, \"seq\": \"2\", \"prev\": \"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\", \"kind\": \"rotate\", \"key\": \"key:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\", \"public_key\": \"ab\", \"compromised\": false, \"at_ms\": \"1\", \"note\": \"\", \"sigs\": [], \"hash\": \"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\", \"suite\": \"geo-ml-dsa-65/1\"}",
    "canonical": "{\"at_ms\":\"1\",\"compromised\":false,\"hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"key\":\"key:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"kind\":\"rotate\",\"note\":\"\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"public_key\":\"ab\",\"seq\":\"2\",\"sigs\":[],\"suite\":\"geo-ml-dsa-65/1\",\"v\":1}"
+  }
+ ],
+ "negative": [
+  {
+   "id": "invalid-digest",
+   "type": "ProjectRevision",
+   "error": "invalid_digest",
+   "input": "{\"digest\":\"sha256:ABC\",\"inputs\":[]}"
+  },
+  {
+   "id": "search-reach-no-percentage",
+   "type": "SearchReach",
+   "error": "unknown_field",
+   "input": "{\"trials\":\"12\",\"complete\":\"9\",\"sleep_blocked\":\"1\",\"depth_cut\":\"0\",\"invalid\":\"0\",\"decisions\":\"31\",\"permits\":\"57\",\"unexplored\":\"2\",\"pruned\":\"4\",\"exhausted\":\"trials\",\"finished\":false,\"notes\":[\"budget: trials\"],\"coverage_percent\":\"97\"}"
+  },
+  {
+   "id": "search-budget-depth-as-string",
+   "type": "SearchBudget",
+   "error": "type",
+   "input": "{\"trials\":\"1\",\"permits\":\"1\",\"depth\":\"3\"}"
+  },
+  {
+   "id": "rule-body-value-domain-extra-field",
+   "type": "RuleBody",
+   "error": "unknown_field",
+   "input": "{\"allowed\":[],\"column\":\"c\",\"kind\":\"value_domain\",\"ns\":\"a.b\",\"when\":[]}"
+  },
+  {
+   "id": "choice-reach-no-percentage",
+   "type": "SearchReach",
+   "error": "unknown_field",
+   "input": "{\"trials\":\"40\",\"complete\":\"31\",\"sleep_blocked\":\"9\",\"depth_cut\":\"0\",\"invalid\":\"0\",\"decisions\":\"112\",\"permits\":\"380\",\"unexplored\":\"0\",\"pruned\":\"54\",\"finished\":true,\"notes\":[\"2 recorded alternative(s) replayed: a recorded set is not the model's output space\"],\"choices\":[{\"class\":\"fault:timeout_after_effect\",\"offered\":\"12\",\"explored\":\"7\",\"share_percent\":\"58\"},{\"class\":\"timer\",\"offered\":\"9\",\"explored\":\"9\"},{\"class\":\"data:recorded\",\"offered\":\"4\",\"explored\":\"4\"}]}"
+  },
+  {
+   "id": "rule-body-r7-exclusive-effects-missing-entity",
+   "type": "RuleBody",
+   "error": "missing_field",
+   "input": "{\"kind\":\"exclusive_effects\",\"tool\":\"orders\",\"operations\":[\"ship\",\"refund\"]}"
+  },
+  {
+   "id": "rule-body-forbidden-call-missing-operation",
+   "type": "RuleBody",
+   "error": "missing_field",
+   "input": "{\"kind\":\"forbidden_call\",\"tool\":\"in_process\"}"
+  },
+  {
+   "id": "rule-body-r7-effect-requires-reading-extra-field",
+   "type": "RuleBody",
+   "error": "unknown_field",
+   "input": "{\"kind\":\"effect_requires_reading\",\"tool\":\"payouts\",\"operation\":\"payout\",\"reading\":\"approval_valid\",\"expires\":\"5\"}"
+  },
+  {
+   "id": "ledger-entry-unknown-kind",
+   "type": "LedgerEntry",
+   "error": "unknown_variant",
+   "input": "{\"v\":1,\"tenant\":\"acme\",\"seq\":\"2\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"rumour\",\"subject\":\"gd-1\",\"at_ms\":\"1790000000000\",\"body_type\":\"GuardDecision\",\"body\":\"{\\\"id\\\":\\\"gd-1\\\"}\",\"payload\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"size\":\"48\"},\"links\":[{\"rel\":\"decision\",\"ledger\":\"ledger-0123456789abcdef\",\"tenant\":\"acme\",\"seq\":\"7\",\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}],\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}"
+  },
+  {
+   "id": "ledger-entry-seq-as-number",
+   "type": "LedgerEntry",
+   "error": "type",
+   "input": "{\"v\":1,\"tenant\":\"acme\",\"seq\":2,\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"guard_decision\",\"subject\":\"gd-1\",\"at_ms\":\"1790000000000\",\"body_type\":\"GuardDecision\",\"body\":\"{\\\"id\\\":\\\"gd-1\\\"}\",\"payload\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"size\":\"48\"},\"links\":[{\"rel\":\"decision\",\"ledger\":\"ledger-0123456789abcdef\",\"tenant\":\"acme\",\"seq\":\"7\",\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}],\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}"
+  },
+  {
+   "id": "ledger-entry-bad-hash",
+   "type": "LedgerEntry",
+   "error": "invalid_digest",
+   "input": "{\"v\":1,\"tenant\":\"acme\",\"seq\":\"2\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"guard_decision\",\"subject\":\"gd-1\",\"at_ms\":\"1790000000000\",\"body_type\":\"GuardDecision\",\"body\":\"{\\\"id\\\":\\\"gd-1\\\"}\",\"payload\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"size\":\"48\"},\"links\":[{\"rel\":\"decision\",\"ledger\":\"ledger-0123456789abcdef\",\"tenant\":\"acme\",\"seq\":\"7\",\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}],\"hash\":\"sha256:xyz\"}"
+  },
+  {
+   "id": "ledger-entry-unknown-field",
+   "type": "LedgerEntry",
+   "error": "unknown_field",
+   "input": "{\"v\":1,\"tenant\":\"acme\",\"seq\":\"2\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"guard_decision\",\"subject\":\"gd-1\",\"at_ms\":\"1790000000000\",\"body_type\":\"GuardDecision\",\"body\":\"{\\\"id\\\":\\\"gd-1\\\"}\",\"payload\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"size\":\"48\"},\"links\":[{\"rel\":\"decision\",\"ledger\":\"ledger-0123456789abcdef\",\"tenant\":\"acme\",\"seq\":\"7\",\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}],\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"editor\":\"someone\"}"
+  },
+  {
+   "id": "ledger-entry-missing-body",
+   "type": "LedgerEntry",
+   "error": "missing_field",
+   "input": "{\"v\":1,\"tenant\":\"acme\",\"seq\":\"2\",\"prev\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"guard_decision\",\"subject\":\"gd-1\",\"at_ms\":\"1790000000000\",\"body_type\":\"GuardDecision\",\"payload\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"size\":\"48\"},\"links\":[{\"rel\":\"decision\",\"ledger\":\"ledger-0123456789abcdef\",\"tenant\":\"acme\",\"seq\":\"7\",\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}],\"hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}"
+  },
+  {
+   "id": "checkpoint-count-as-number",
+   "type": "Checkpoint",
+   "error": "type",
+   "input": "{\"v\":1,\"tenant\":\"acme\",\"seq\":\"9\",\"head\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"count\":9,\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"key_log_seq\":\"1\",\"at_ms\":\"1790000001000\",\"sig\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}"
+  },
+  {
+   "id": "key-event-unknown-kind",
+   "type": "KeyEvent",
+   "error": "unknown_variant",
+   "input": "{\"v\":1,\"seq\":\"1\",\"kind\":\"forget\",\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"public_key\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"compromised\":false,\"at_ms\":\"1789999990000\",\"note\":\"first key\",\"sigs\":[{\"key\":\"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sig\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}],\"hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}"
+  },
+  {
+   "id": "action-evidence-unknown-effect",
+   "type": "ActionEvidence",
+   "error": "unknown_variant",
+   "input": "{\"subject\":\"gd-1\",\"dispatch\":\"dispatched\",\"effect\":\"executed\",\"seqs\":[],\"notes\":[]}"
+  },
+  {
+   "id": "anchor-missing-checkpoint",
+   "type": "Anchor",
+   "error": "missing_field",
+   "input": "{\"v\":1,\"public_key\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"note\":\"\"}"
+  },
+  {
+   "id": "suite-signature-bad-bytes",
+   "type": "SuiteSignature",
+   "error": "non_canonical",
+   "input": "{\"suite\": \"geo-ml-dsa-65/1\", \"algorithm\": \"ml-dsa-65\", \"key\": \"key:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\", \"signature\": \"not base64!\"}"
+  },
+  {
+   "id": "suite-signature-missing-algorithm",
+   "type": "SuiteSignature",
+   "error": "missing_field",
+   "input": "{\"suite\": \"geo-ml-dsa-65/1\", \"key\": \"key:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\", \"signature\": \"AAECAwQFBgcICQoLDA0ODw==\"}"
+  },
+  {
+   "id": "checkpoint-sigs-null",
+   "type": "Checkpoint",
+   "error": "type",
+   "input": "{\"v\": 2, \"tenant\": \"acme\", \"seq\": \"32\", \"head\": \"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\", \"count\": \"32\", \"key\": \"key:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\", \"key_log_seq\": \"3\", \"at_ms\": \"1790000000000\", \"sig\": \"\", \"profile\": \"geo-profile/hybrid/1\", \"sigs\": null}"
+  },
+  {
+   "id": "suite-input-bad-digest",
+   "type": "SuiteSignatureInput",
+   "error": "invalid_digest",
+   "input": "{\"record_type\": \"geo.checkpoint/2\", \"record\": \"sha256:xyz\", \"profile\": \"geo-profile/hybrid/1\", \"suite\": \"geo-ml-dsa-65/1\", \"algorithm\": \"ml-dsa-65\", \"key\": \"key:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}"
+  },
+  {
+   "id": "anchor-key-unknown-field",
+   "type": "AnchorKey",
+   "error": "unknown_field",
+   "input": "{\"key\": \"key:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\", \"suite\": \"geo-ml-dsa-65/1\", \"public_key\": \"abababab\", \"extra\": 1}"
   }
  ]
 }

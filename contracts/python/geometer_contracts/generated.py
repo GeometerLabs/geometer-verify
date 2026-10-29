@@ -155,7 +155,7 @@ def decode_transition(j, path: str) -> Transition:
     return Transition(from_=req(m, "from", path, decode_value), to=req(m, "to", path, decode_value))
 
 
-# Typed rule families. exclusive_effects: for one entity (the values of the entity argument fields), at most one of the listed operations of a tool may commit. effect_requires_reading: every committed effect of the operation must carry the named dispatch-time reading as true. ns is <service>.<table>. State families read the final state: not_null (a present, non-null value), value_domain (non-null values among allowed; numbers compare by value), unique_key (no two rows share a key without nulls), reference (every key without nulls exists in target_ns).
+# Typed rule families. exclusive_effects: for one entity (the values of the entity argument fields), at most one of the listed operations of a tool may commit. effect_requires_reading: every committed effect of the operation must carry the named dispatch-time reading as true. argument_bound: the number in the named argument of every call to the operation of the tool lies between min and max, both inclusive and either optional (text such as "80.00" compares as an exact decimal; a missing or non-numeric argument is unknown, never a pass; decided per call). forbidden_call: the operation of the tool is never called, whatever its arguments or outcome (a call the gateway or hook saw, committed or not; decided per call, so the Guard can refuse it before dispatch). ns is <service>.<table>. State families read the final state: not_null (a present, non-null value), value_domain (non-null values among allowed; numbers compare by value), unique_key (no two rows share a key without nulls), reference (every key without nulls exists in target_ns).
 @dataclass
 class RuleBodyNumericBound:
     KIND: ClassVar[str] = "numeric_bound"
@@ -200,6 +200,16 @@ class RuleBodyArgumentAllowlist:
     operation: str
     field: str
     allowed_suffixes: list[str]
+
+
+@dataclass
+class RuleBodyArgumentBound:
+    KIND: ClassVar[str] = "argument_bound"
+    tool: str
+    operation: str
+    field: str
+    min: Value | None = None
+    max: Value | None = None
 
 
 @dataclass
@@ -277,7 +287,14 @@ class RuleBodyEffectRequiresReading:
     reading: str
 
 
-RuleBody = Union[RuleBodyNumericBound, RuleBodyConservation, RuleBodyEnumTransitions, RuleBodyAtMostOnce, RuleBodyAtMostOnceEffect, RuleBodyArgumentAllowlist, RuleBodyCallBoundApproval, RuleBodyBoundedCompletion, RuleBodyRowInvariant, RuleBodyNotNull, RuleBodyValueDomain, RuleBodyUniqueKey, RuleBodyReference, RuleBodyExclusiveEffects, RuleBodyEffectRequiresReading]
+@dataclass
+class RuleBodyForbiddenCall:
+    KIND: ClassVar[str] = "forbidden_call"
+    tool: str
+    operation: str
+
+
+RuleBody = Union[RuleBodyNumericBound, RuleBodyConservation, RuleBodyEnumTransitions, RuleBodyAtMostOnce, RuleBodyAtMostOnceEffect, RuleBodyArgumentAllowlist, RuleBodyArgumentBound, RuleBodyCallBoundApproval, RuleBodyBoundedCompletion, RuleBodyRowInvariant, RuleBodyNotNull, RuleBodyValueDomain, RuleBodyUniqueKey, RuleBodyReference, RuleBodyExclusiveEffects, RuleBodyEffectRequiresReading, RuleBodyForbiddenCall]
 
 
 def encode_rule_body(v):
@@ -306,6 +323,14 @@ def encode_rule_body(v):
         m["operation"] = enc_string(v.operation)
         m["field"] = enc_string(v.field)
         m["allowed_suffixes"] = [enc_string(e) for e in v.allowed_suffixes]
+    if isinstance(v, RuleBodyArgumentBound):
+        m["tool"] = enc_string(v.tool)
+        m["operation"] = enc_string(v.operation)
+        m["field"] = enc_string(v.field)
+        if v.min is not None:
+            m["min"] = encode_value(v.min)
+        if v.max is not None:
+            m["max"] = encode_value(v.max)
     if isinstance(v, RuleBodyCallBoundApproval):
         m["tool"] = enc_string(v.tool)
         m["operation"] = enc_string(v.operation)
@@ -345,6 +370,9 @@ def encode_rule_body(v):
         m["tool"] = enc_string(v.tool)
         m["operation"] = enc_string(v.operation)
         m["reading"] = enc_string(v.reading)
+    if isinstance(v, RuleBodyForbiddenCall):
+        m["tool"] = enc_string(v.tool)
+        m["operation"] = enc_string(v.operation)
     return m
 
 
@@ -369,6 +397,9 @@ def decode_rule_body(j, path: str):
     if kind == "argument_allowlist":
         only_fields(m, ("tool", "operation", "field", "allowed_suffixes", "kind"), path)
         return RuleBodyArgumentAllowlist(tool=req(m, "tool", path, dec_id), operation=req(m, "operation", path, dec_string), field=req(m, "field", path, dec_string), allowed_suffixes=req(m, "allowed_suffixes", path, dec_list(dec_string)))
+    if kind == "argument_bound":
+        only_fields(m, ("tool", "operation", "field", "min", "max", "kind"), path)
+        return RuleBodyArgumentBound(tool=req(m, "tool", path, dec_id), operation=req(m, "operation", path, dec_string), field=req(m, "field", path, dec_string), min=opt(m, "min", path, decode_value), max=opt(m, "max", path, decode_value))
     if kind == "call_bound_approval":
         only_fields(m, ("tool", "operation", "amount_field", "threshold", "approval_field", "kind"), path)
         return RuleBodyCallBoundApproval(tool=req(m, "tool", path, dec_id), operation=req(m, "operation", path, dec_string), amount_field=req(m, "amount_field", path, dec_string), threshold=req(m, "threshold", path, decode_value), approval_field=req(m, "approval_field", path, dec_string))
@@ -396,6 +427,9 @@ def decode_rule_body(j, path: str):
     if kind == "effect_requires_reading":
         only_fields(m, ("tool", "operation", "reading", "kind"), path)
         return RuleBodyEffectRequiresReading(tool=req(m, "tool", path, dec_id), operation=req(m, "operation", path, dec_string), reading=req(m, "reading", path, dec_string))
+    if kind == "forbidden_call":
+        only_fields(m, ("tool", "operation", "kind"), path)
+        return RuleBodyForbiddenCall(tool=req(m, "tool", path, dec_id), operation=req(m, "operation", path, dec_string))
     raise DecodeError("unknown_variant", path, f"unknown RuleBody {kind}")
 
 

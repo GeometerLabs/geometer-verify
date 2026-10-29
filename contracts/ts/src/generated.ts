@@ -103,8 +103,8 @@ export function decodeTransition(j: Json, path: string): Transition {
   return { from: req(m, "from", path, decodeValue), to: req(m, "to", path, decodeValue) };
 }
 
-/** Typed rule families. exclusive_effects: for one entity (the values of the entity argument fields), at most one of the listed operations of a tool may commit. effect_requires_reading: every committed effect of the operation must carry the named dispatch-time reading as true. ns is <service>.<table>. State families read the final state: not_null (a present, non-null value), value_domain (non-null values among allowed; numbers compare by value), unique_key (no two rows share a key without nulls), reference (every key without nulls exists in target_ns). */
-export type RuleBody = { kind: "numeric_bound"; ns: string; column: string; min?: Value; max?: Value } | { kind: "conservation"; terms: ConservedTerm[] } | { kind: "enum_transitions"; ns: string; column: string; allowed: Transition[] } | { kind: "at_most_once"; op: string; identity: string[] } | { kind: "at_most_once_effect"; tool: string; operation: string } | { kind: "argument_allowlist"; tool: string; operation: string; field: string; allowed_suffixes: string[] } | { kind: "call_bound_approval"; tool: string; operation: string; amount_field: string; threshold: Value; approval_field: string } | { kind: "bounded_completion"; trigger_op: string; trigger_field: string; completion_op: string; completion_field: string } | { kind: "row_invariant"; ns: string; when: Condition[]; left: string; right: string } | { kind: "not_null"; ns: string; column: string } | { kind: "value_domain"; ns: string; column: string; allowed: Value[] } | { kind: "unique_key"; ns: string; columns: string[] } | { kind: "reference"; ns: string; columns: string[]; target_ns: string; target_columns: string[] } | { kind: "exclusive_effects"; tool: string; operations: string[]; entity: string[] } | { kind: "effect_requires_reading"; tool: string; operation: string; reading: string };
+/** Typed rule families. exclusive_effects: for one entity (the values of the entity argument fields), at most one of the listed operations of a tool may commit. effect_requires_reading: every committed effect of the operation must carry the named dispatch-time reading as true. argument_bound: the number in the named argument of every call to the operation of the tool lies between min and max, both inclusive and either optional (text such as "80.00" compares as an exact decimal; a missing or non-numeric argument is unknown, never a pass; decided per call). forbidden_call: the operation of the tool is never called, whatever its arguments or outcome (a call the gateway or hook saw, committed or not; decided per call, so the Guard can refuse it before dispatch). ns is <service>.<table>. State families read the final state: not_null (a present, non-null value), value_domain (non-null values among allowed; numbers compare by value), unique_key (no two rows share a key without nulls), reference (every key without nulls exists in target_ns). */
+export type RuleBody = { kind: "numeric_bound"; ns: string; column: string; min?: Value; max?: Value } | { kind: "conservation"; terms: ConservedTerm[] } | { kind: "enum_transitions"; ns: string; column: string; allowed: Transition[] } | { kind: "at_most_once"; op: string; identity: string[] } | { kind: "at_most_once_effect"; tool: string; operation: string } | { kind: "argument_allowlist"; tool: string; operation: string; field: string; allowed_suffixes: string[] } | { kind: "argument_bound"; tool: string; operation: string; field: string; min?: Value; max?: Value } | { kind: "call_bound_approval"; tool: string; operation: string; amount_field: string; threshold: Value; approval_field: string } | { kind: "bounded_completion"; trigger_op: string; trigger_field: string; completion_op: string; completion_field: string } | { kind: "row_invariant"; ns: string; when: Condition[]; left: string; right: string } | { kind: "not_null"; ns: string; column: string } | { kind: "value_domain"; ns: string; column: string; allowed: Value[] } | { kind: "unique_key"; ns: string; columns: string[] } | { kind: "reference"; ns: string; columns: string[]; target_ns: string; target_columns: string[] } | { kind: "exclusive_effects"; tool: string; operations: string[]; entity: string[] } | { kind: "effect_requires_reading"; tool: string; operation: string; reading: string } | { kind: "forbidden_call"; tool: string; operation: string };
 export function encodeRuleBody(v: RuleBody): Json {
   const m = new Map<string, Json>();
   m.set("kind", v.kind);
@@ -141,6 +141,14 @@ export function encodeRuleBody(v: RuleBody): Json {
       m.set("operation", encString(v.operation));
       m.set("field", encString(v.field));
       m.set("allowed_suffixes", v.allowed_suffixes.map((e) => encString(e)));
+      break;
+    }
+    case "argument_bound": {
+      m.set("tool", encString(v.tool));
+      m.set("operation", encString(v.operation));
+      m.set("field", encString(v.field));
+      if (v.min !== undefined) m.set("min", encodeValue(v.min));
+      if (v.max !== undefined) m.set("max", encodeValue(v.max));
       break;
     }
     case "call_bound_approval": {
@@ -200,6 +208,11 @@ export function encodeRuleBody(v: RuleBody): Json {
       m.set("reading", encString(v.reading));
       break;
     }
+    case "forbidden_call": {
+      m.set("tool", encString(v.tool));
+      m.set("operation", encString(v.operation));
+      break;
+    }
   }
   return new JObj(m);
 }
@@ -225,6 +238,9 @@ export function decodeRuleBody(j: Json, path: string): RuleBody {
     case "argument_allowlist":
       onlyFields(m, ["tool", "operation", "field", "allowed_suffixes", "kind"], path);
       return { kind: "argument_allowlist", tool: req(m, "tool", path, decId), operation: req(m, "operation", path, decString), field: req(m, "field", path, decString), allowed_suffixes: req(m, "allowed_suffixes", path, decList(decString)) };
+    case "argument_bound":
+      onlyFields(m, ["tool", "operation", "field", "min", "max", "kind"], path);
+      return { kind: "argument_bound", tool: req(m, "tool", path, decId), operation: req(m, "operation", path, decString), field: req(m, "field", path, decString), min: opt(m, "min", path, decodeValue), max: opt(m, "max", path, decodeValue) };
     case "call_bound_approval":
       onlyFields(m, ["tool", "operation", "amount_field", "threshold", "approval_field", "kind"], path);
       return { kind: "call_bound_approval", tool: req(m, "tool", path, decId), operation: req(m, "operation", path, decString), amount_field: req(m, "amount_field", path, decString), threshold: req(m, "threshold", path, decodeValue), approval_field: req(m, "approval_field", path, decString) };
@@ -252,6 +268,9 @@ export function decodeRuleBody(j: Json, path: string): RuleBody {
     case "effect_requires_reading":
       onlyFields(m, ["tool", "operation", "reading", "kind"], path);
       return { kind: "effect_requires_reading", tool: req(m, "tool", path, decId), operation: req(m, "operation", path, decString), reading: req(m, "reading", path, decString) };
+    case "forbidden_call":
+      onlyFields(m, ["tool", "operation", "kind"], path);
+      return { kind: "forbidden_call", tool: req(m, "tool", path, decId), operation: req(m, "operation", path, decString) };
     default:
       throw new DecodeError("unknown_variant", path, `unknown RuleBody ${kind}`);
   }

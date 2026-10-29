@@ -65,7 +65,7 @@ fields = [
 ]
 
 [union.RuleBody]
-doc = "Typed rule families. exclusive_effects: for one entity (the values of the entity argument fields), at most one of the listed operations of a tool may commit. effect_requires_reading: every committed effect of the operation must carry the named dispatch-time reading as true. ns is <service>.<table>. State families read the final state: not_null (a present, non-null value), value_domain (non-null values among allowed; numbers compare by value), unique_key (no two rows share a key without nulls), reference (every key without nulls exists in target_ns)."
+doc = "Typed rule families. exclusive_effects: for one entity (the values of the entity argument fields), at most one of the listed operations of a tool may commit. effect_requires_reading: every committed effect of the operation must carry the named dispatch-time reading as true. argument_bound: the number in the named argument of every call to the operation of the tool lies between min and max, both inclusive and either optional (text such as \"80.00\" compares as an exact decimal; a missing or non-numeric argument is unknown, never a pass; decided per call). forbidden_call: the operation of the tool is never called, whatever its arguments or outcome (a call the gateway or hook saw, committed or not; decided per call, so the Guard can refuse it before dispatch). ns is <service>.<table>. State families read the final state: not_null (a present, non-null value), value_domain (non-null values among allowed; numbers compare by value), unique_key (no two rows share a key without nulls), reference (every key without nulls exists in target_ns)."
 [union.RuleBody.variants]
 numeric_bound = [{ name = "ns", type = "string" }, { name = "column", type = "string" }, { name = "min", type = "option<value>" }, { name = "max", type = "option<value>" }]
 conservation = [{ name = "terms", type = "list<ConservedTerm>" }]
@@ -73,6 +73,7 @@ enum_transitions = [{ name = "ns", type = "string" }, { name = "column", type = 
 at_most_once = [{ name = "op", type = "string" }, { name = "identity", type = "list<string>" }]
 at_most_once_effect = [{ name = "tool", type = "id" }, { name = "operation", type = "string" }]
 argument_allowlist = [{ name = "tool", type = "id" }, { name = "operation", type = "string" }, { name = "field", type = "string" }, { name = "allowed_suffixes", type = "list<string>" }]
+argument_bound = [{ name = "tool", type = "id" }, { name = "operation", type = "string" }, { name = "field", type = "string" }, { name = "min", type = "option<value>" }, { name = "max", type = "option<value>" }]
 call_bound_approval = [{ name = "tool", type = "id" }, { name = "operation", type = "string" }, { name = "amount_field", type = "string" }, { name = "threshold", type = "value" }, { name = "approval_field", type = "string" }]
 bounded_completion = [{ name = "trigger_op", type = "string" }, { name = "trigger_field", type = "string" }, { name = "completion_op", type = "string" }, { name = "completion_field", type = "string" }]
 row_invariant = [{ name = "ns", type = "string" }, { name = "when", type = "list<Condition>" }, { name = "left", type = "string" }, { name = "right", type = "string" }]
@@ -82,6 +83,7 @@ unique_key = [{ name = "ns", type = "string" }, { name = "columns", type = "list
 reference = [{ name = "ns", type = "string" }, { name = "columns", type = "list<string>" }, { name = "target_ns", type = "string" }, { name = "target_columns", type = "list<string>" }]
 exclusive_effects = [{ name = "tool", type = "id" }, { name = "operations", type = "list<string>" }, { name = "entity", type = "list<string>" }]
 effect_requires_reading = [{ name = "tool", type = "id" }, { name = "operation", type = "string" }, { name = "reading", type = "string" }]
+forbidden_call = [{ name = "tool", type = "id" }, { name = "operation", type = "string" }]
 
 [enum.EvidenceNeed]
 doc = "Evidence a rule's meaning requires. Missing required evidence makes a result unknown, never a pass."
