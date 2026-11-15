@@ -246,7 +246,7 @@ impl Canon for Transition {
     }
 }
 
-/// Typed rule families. exclusive_effects: for one entity (the values of the entity argument fields), at most one of the listed operations of a tool may commit. effect_requires_reading: every committed effect of the operation must carry the named dispatch-time reading as true. argument_bound: the number in the named argument of every call to the operation of the tool lies between min and max, both inclusive and either optional (text such as "80.00" compares as an exact decimal; a missing or non-numeric argument is unknown, never a pass; decided per call). forbidden_call: the operation of the tool is never called, whatever its arguments or outcome (a call the gateway or hook saw, committed or not; decided per call, so the Guard can refuse it before dispatch). ns is <service>.<table>. State families read the final state: not_null (a present, non-null value), value_domain (non-null values among allowed; numbers compare by value), unique_key (no two rows share a key without nulls), reference (every key without nulls exists in target_ns).
+/// Typed rule families. exclusive_effects: for one entity (the values of the entity argument fields), at most one of the listed operations of a tool may commit. effect_requires_reading: every committed effect of the operation must carry the named dispatch-time reading as true. argument_bound: the number in the named argument of every call to the operation of the tool lies between min and max, both inclusive and either optional (text such as "80.00" compares as an exact decimal; a missing or non-numeric argument is unknown, never a pass; decided per call). encoding says how the provider takes that number on the wire: absent means a JSON number, "string" a JSON string (or a query, path or form value) that spells it exactly. Explore reads text and numbers alike; the Guard refuses a value written any other way than the declared encoding, and a fraction where both bounds are whole numbers. forbidden_call: the operation of the tool is never called, whatever its arguments or outcome (a call the gateway or hook saw, committed or not; decided per call, so the Guard can refuse it before dispatch). ns is <service>.<table>. State families read the final state: not_null (a present, non-null value), value_domain (non-null values among allowed; numbers compare by value), unique_key (no two rows share a key without nulls), reference (every key without nulls exists in target_ns).
 #[derive(Debug, Clone, PartialEq)]
 pub enum RuleBody {
     NumericBound { ns: String, column: String, min: Option<Value>, max: Option<Value> },
@@ -255,7 +255,7 @@ pub enum RuleBody {
     AtMostOnce { op: String, identity: Vec<String> },
     AtMostOnceEffect { tool: Id, operation: String },
     ArgumentAllowlist { tool: Id, operation: String, field: String, allowed_suffixes: Vec<String> },
-    ArgumentBound { tool: Id, operation: String, field: String, min: Option<Value>, max: Option<Value> },
+    ArgumentBound { tool: Id, operation: String, field: String, min: Option<Value>, max: Option<Value>, encoding: Option<String> },
     CallBoundApproval { tool: Id, operation: String, amount_field: String, threshold: Value, approval_field: String },
     BoundedCompletion { trigger_op: String, trigger_field: String, completion_op: String, completion_field: String },
     RowInvariant { ns: String, when: Vec<Condition>, left: String, right: String },
@@ -325,12 +325,13 @@ impl Canon for RuleBody {
                 put(&mut m, "field", field);
                 put(&mut m, "allowed_suffixes", allowed_suffixes);
             }
-            RuleBody::ArgumentBound { tool, operation, field, min, max } => {
+            RuleBody::ArgumentBound { tool, operation, field, min, max, encoding } => {
                 put(&mut m, "tool", tool);
                 put(&mut m, "operation", operation);
                 put(&mut m, "field", field);
                 put_opt(&mut m, "min", min);
                 put_opt(&mut m, "max", max);
+                put_opt(&mut m, "encoding", encoding);
             }
             RuleBody::CallBoundApproval { tool, operation, amount_field, threshold, approval_field } => {
                 put(&mut m, "tool", tool);
@@ -416,8 +417,8 @@ impl Canon for RuleBody {
                 Ok(RuleBody::ArgumentAllowlist { tool: req(m, "tool", path)?, operation: req(m, "operation", path)?, field: req(m, "field", path)?, allowed_suffixes: req(m, "allowed_suffixes", path)? })
             }
             "argument_bound" => {
-                only_fields(m, &["tool", "operation", "field", "min", "max", "kind"], path)?;
-                Ok(RuleBody::ArgumentBound { tool: req(m, "tool", path)?, operation: req(m, "operation", path)?, field: req(m, "field", path)?, min: opt(m, "min", path)?, max: opt(m, "max", path)? })
+                only_fields(m, &["tool", "operation", "field", "min", "max", "encoding", "kind"], path)?;
+                Ok(RuleBody::ArgumentBound { tool: req(m, "tool", path)?, operation: req(m, "operation", path)?, field: req(m, "field", path)?, min: opt(m, "min", path)?, max: opt(m, "max", path)?, encoding: opt(m, "encoding", path)? })
             }
             "call_bound_approval" => {
                 only_fields(m, &["tool", "operation", "amount_field", "threshold", "approval_field", "kind"], path)?;

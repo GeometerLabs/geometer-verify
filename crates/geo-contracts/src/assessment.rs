@@ -136,12 +136,6 @@ pub fn renewal_hash(r: &AssessmentRenewal) -> Digest {
     Digest::of(&[RENEWAL_DOMAIN, &c.encode()].concat())
 }
 
-/// The digest a renewal cites for a verification result: sha256 of its
-/// canonical bytes.
-pub fn verification_digest(v: &AssessmentVerification) -> Digest {
-    Digest::of(&v.encode())
-}
-
 // ------------------------------------------------------------ problems
 
 /// Why a manifest is refused. The snake_case names are used by the shared

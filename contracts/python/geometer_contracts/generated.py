@@ -155,7 +155,7 @@ def decode_transition(j, path: str) -> Transition:
     return Transition(from_=req(m, "from", path, decode_value), to=req(m, "to", path, decode_value))
 
 
-# Typed rule families. exclusive_effects: for one entity (the values of the entity argument fields), at most one of the listed operations of a tool may commit. effect_requires_reading: every committed effect of the operation must carry the named dispatch-time reading as true. argument_bound: the number in the named argument of every call to the operation of the tool lies between min and max, both inclusive and either optional (text such as "80.00" compares as an exact decimal; a missing or non-numeric argument is unknown, never a pass; decided per call). forbidden_call: the operation of the tool is never called, whatever its arguments or outcome (a call the gateway or hook saw, committed or not; decided per call, so the Guard can refuse it before dispatch). ns is <service>.<table>. State families read the final state: not_null (a present, non-null value), value_domain (non-null values among allowed; numbers compare by value), unique_key (no two rows share a key without nulls), reference (every key without nulls exists in target_ns).
+# Typed rule families. exclusive_effects: for one entity (the values of the entity argument fields), at most one of the listed operations of a tool may commit. effect_requires_reading: every committed effect of the operation must carry the named dispatch-time reading as true. argument_bound: the number in the named argument of every call to the operation of the tool lies between min and max, both inclusive and either optional (text such as "80.00" compares as an exact decimal; a missing or non-numeric argument is unknown, never a pass; decided per call). encoding says how the provider takes that number on the wire: absent means a JSON number, "string" a JSON string (or a query, path or form value) that spells it exactly. Explore reads text and numbers alike; the Guard refuses a value written any other way than the declared encoding, and a fraction where both bounds are whole numbers. forbidden_call: the operation of the tool is never called, whatever its arguments or outcome (a call the gateway or hook saw, committed or not; decided per call, so the Guard can refuse it before dispatch). ns is <service>.<table>. State families read the final state: not_null (a present, non-null value), value_domain (non-null values among allowed; numbers compare by value), unique_key (no two rows share a key without nulls), reference (every key without nulls exists in target_ns).
 @dataclass
 class RuleBodyNumericBound:
     KIND: ClassVar[str] = "numeric_bound"
@@ -210,6 +210,7 @@ class RuleBodyArgumentBound:
     field: str
     min: Value | None = None
     max: Value | None = None
+    encoding: str | None = None
 
 
 @dataclass
@@ -331,6 +332,8 @@ def encode_rule_body(v):
             m["min"] = encode_value(v.min)
         if v.max is not None:
             m["max"] = encode_value(v.max)
+        if v.encoding is not None:
+            m["encoding"] = enc_string(v.encoding)
     if isinstance(v, RuleBodyCallBoundApproval):
         m["tool"] = enc_string(v.tool)
         m["operation"] = enc_string(v.operation)
@@ -398,8 +401,8 @@ def decode_rule_body(j, path: str):
         only_fields(m, ("tool", "operation", "field", "allowed_suffixes", "kind"), path)
         return RuleBodyArgumentAllowlist(tool=req(m, "tool", path, dec_id), operation=req(m, "operation", path, dec_string), field=req(m, "field", path, dec_string), allowed_suffixes=req(m, "allowed_suffixes", path, dec_list(dec_string)))
     if kind == "argument_bound":
-        only_fields(m, ("tool", "operation", "field", "min", "max", "kind"), path)
-        return RuleBodyArgumentBound(tool=req(m, "tool", path, dec_id), operation=req(m, "operation", path, dec_string), field=req(m, "field", path, dec_string), min=opt(m, "min", path, decode_value), max=opt(m, "max", path, decode_value))
+        only_fields(m, ("tool", "operation", "field", "min", "max", "encoding", "kind"), path)
+        return RuleBodyArgumentBound(tool=req(m, "tool", path, dec_id), operation=req(m, "operation", path, dec_string), field=req(m, "field", path, dec_string), min=opt(m, "min", path, decode_value), max=opt(m, "max", path, decode_value), encoding=opt(m, "encoding", path, dec_string))
     if kind == "call_bound_approval":
         only_fields(m, ("tool", "operation", "amount_field", "threshold", "approval_field", "kind"), path)
         return RuleBodyCallBoundApproval(tool=req(m, "tool", path, dec_id), operation=req(m, "operation", path, dec_string), amount_field=req(m, "amount_field", path, dec_string), threshold=req(m, "threshold", path, decode_value), approval_field=req(m, "approval_field", path, dec_string))

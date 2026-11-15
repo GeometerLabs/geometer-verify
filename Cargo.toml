@@ -5,9 +5,9 @@ members = ["crates/geo-contracts", "crates/geo-verify", "tools/contractgen"]
 
 [workspace.package]
 repository = "https://github.com/GeometerLabs/geometer-verify"
-version = "0.1.0-alpha.2"
+version = "0.1.0-alpha.3"
 edition = "2024"
-license = "Apache-2.0"
+license = "LicenseRef-Geometer-Alpha-Terms"
 rust-version = "1.96"
 publish = false
 

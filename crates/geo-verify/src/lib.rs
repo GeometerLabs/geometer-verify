@@ -171,7 +171,13 @@ impl Report {
         };
         o.push_str(&format!("{head}\ntenant {}, {} entries, {} anchor(s)\n", self.tenant, self.entries, self.anchors));
         if let Some((a, b)) = self.verified {
-            o.push_str(&format!("verified: entries {a} to {b} match the anchor\n"));
+            if self.state == IntegrityState::VerifiedAgainstCheckpoint {
+                o.push_str(&format!("verified: entries {a} to {b} match the anchor\n"));
+            } else {
+                // Not "verified" above a verdict that is not: the chain reaches the anchor, but what follows was found
+                // inside or beside it.
+                o.push_str(&format!("chain: entries {a} to {b} link to the anchor, but see below\n"));
+            }
         }
         for (a, b) in &self.unverifiable {
             o.push_str(&format!("unverifiable: entries {a} to {b} are not covered by a saved anchor\n"));
